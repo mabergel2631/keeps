@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
 import { compareApi, PolicyBundle } from '../../../../lib/api';
 
-export default function ComparePage() {
+function CompareContent() {
   const { token, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -141,5 +141,13 @@ export default function ComparePage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24 }}>Loading...</div>}>
+      <CompareContent />
+    </Suspense>
   );
 }
