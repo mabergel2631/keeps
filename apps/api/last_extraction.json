@@ -1,64 +1,129 @@
 {
-  "carrier": null,
-  "policy_number": "181585208",
-  "policy_type": "life",
+  "carrier": "Mercury Insurance Company",
+  "policy_number": "CAAP0000512021",
+  "policy_type": "auto",
   "scope": "personal",
-  "coverage_amount": 1000000,
-  "deductible": null,
-  "renewal_date": null,
-  "effective_date": "2019-04-15",
+  "coverage_amount": 500000,
+  "deductible": 1000,
+  "renewal_date": "2026-04-04",
+  "effective_date": "2025-10-04",
   "named_insured": "Michael Abergel",
-  "payment_schedule": "monthly",
-  "premium_amount": 137,
+  "payment_schedule": "semi-annual",
+  "premium_amount": 1929,
   "contacts": [
     {
-      "role": "broker",
+      "role": "claims",
       "name": null,
-      "company": "SelectQuote Insurance Services",
-      "phone": "(800) 343-1985",
+      "company": null,
+      "phone": "(800) 503-3724",
       "email": null
     },
     {
-      "role": "customer_service",
-      "name": null,
-      "company": null,
-      "phone": "(800) 638-8428",
-      "email": "customerservice@bannerlife.com"
+      "role": "agent",
+      "name": "Gaspar Insurance Services",
+      "company": "Mercury Insurance Company",
+      "phone": "(818) 302-3060",
+      "email": null
     },
     {
-      "role": "other",
-      "name": null,
+      "role": "named_insured",
+      "name": "Michael Abergel",
       "company": null,
       "phone": "(818) 618-4000",
-      "email": null
+      "email": "mabergel@me.com"
     }
   ],
-  "inclusions": [],
+  "inclusions": [
+    {
+      "description": "Bodily Injury Liability",
+      "limit": "$250,000 each Person/$500,000 each Accident"
+    },
+    {
+      "description": "Property Damage Liability",
+      "limit": "$100,000 each Accident"
+    },
+    {
+      "description": "Uninsured/Underinsured Motorist Bodily Injury",
+      "limit": "$250,000 each Person/$500,000 each Accident"
+    },
+    {
+      "description": "Uninsured Motorist Property Damage/Collision Deductible Waiver",
+      "limit": null
+    },
+    {
+      "description": "Medical Payments",
+      "limit": "$5,000 each Person/each Accident"
+    },
+    {
+      "description": "Comprehensive",
+      "limit": "Actual Cash Value Less $1,000 Deductible"
+    },
+    {
+      "description": "Collision",
+      "limit": "Actual Cash Value Less $1,000 Deductible"
+    },
+    {
+      "description": "Rental",
+      "limit": "$50 each Day/Maximum 30 Days"
+    },
+    {
+      "description": "Roadside Assistance",
+      "limit": "$75 Towing and $75 for Non-Towing Services per Occurrence/Maximum 3 Occurrences"
+    },
+    {
+      "description": "Non-Factory Equipment",
+      "limit": "$1,000"
+    }
+  ],
   "exclusions": [],
   "details": [
     {
-      "field_name": "face_value",
-      "field_value": "$1,000,000.00"
+      "field_name": "vehicle_1_description",
+      "field_value": "2020 PORSCHE 911 CARRERA BASE CONV"
     },
     {
-      "field_name": "term_length",
-      "field_value": "10 years"
+      "field_name": "vehicle_1_VIN",
+      "field_value": "WP0CB2A91LS263316"
     },
     {
-      "field_name": "insured_name",
-      "field_value": "Michael Abergel"
+      "field_name": "vehicle_2_description",
+      "field_value": "2020 PORSCHE MACAN WAG 4DR"
     },
     {
-      "field_name": "beneficiary",
-      "field_value": "Joli Abergel"
+      "field_name": "vehicle_2_VIN",
+      "field_value": "WP1AA2A58LKB08244"
     },
     {
-      "field_name": "contingent_beneficiary",
-      "field_value": "All surviving children of Michael Abergel equally"
+      "field_name": "listed_drivers",
+      "field_value": "Michael Abergel, Joli Abergel"
     },
     {
-      "field_name": "policy_owner",
-      "field_value": "Michael Abergel"
+      "field_name": "garaging_address",
+      "field_value": "2631 Oakshore Dr, Westlake Village, CA, 91361-3442"
+    },
+    {
+      "field_name": "vehicle_1_usage_type",
+      "field_value": "Commuting"
+    },
+    {
+      "field_name": "vehicle_2_usage_type",
+      "field_value": "Pleasure"
+    },
+    {
+      "field_name": "liability_limit",
+      "field_value": "$250,000 each Person/$500,000 each Accident"
+    },
+    {
+      "field_name": "collision_deductible",
+      "field_value": "$1,000"
+    },
+    {
+      "field_name": "comprehensive_deductible",
+      "field_value": "$1,000"
+    },
+    {
+      "field_name": "roadside_assistance",
+      "field_value": "$75 Towing and $75 for Non-Towing Services per Occurrence/Maximum 3 Occurrences"
     }
   ]
 }

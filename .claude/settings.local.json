@@ -42,7 +42,12 @@
       "Bash(gh:*)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo create poliq --private --source=. --remote=origin --push)",
+      "Bash(git push)",
+      "WebFetch(domain:poliq-production.up.railway.app)"
     ]
   }
 }
