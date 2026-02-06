@@ -35,12 +35,15 @@ def extract_document(document_id: int, db: Session = Depends(get_db), user: User
     db.commit()
 
     try:
-        download_url = presign_get_url(doc.object_key)
-        resp = httpx.get(download_url)
-        resp.raise_for_status()
+        # Read file directly from disk instead of HTTP
+        from pathlib import Path
+        upload_dir = Path(__file__).resolve().parent.parent / "uploads"
+        file_path = upload_dir / doc.object_key
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found on disk")
+        pdf_bytes = file_path.read_bytes()
 
         text = ""
-        pdf_bytes = resp.content
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
