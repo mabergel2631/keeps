@@ -9,6 +9,7 @@ function getToken(): string | null {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${path}`;
+  console.log('[API] Requesting:', url);
   const token = getToken();
 
   const headers: Record<string, string> = {
@@ -17,7 +18,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(url, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch (fetchErr: any) {
+    console.error('[API] Fetch error:', fetchErr.message, 'URL:', url);
+    throw new Error(`Network error: ${fetchErr.message}. API URL: ${url}`);
+  }
+
   const text = await res.text();
   const data = text ? safeJsonParse(text) : null;
 
