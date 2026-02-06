@@ -228,13 +228,17 @@ export default function PolicyDetailPage() {
         xhr.upload.onprogress = (e) => { if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100)); };
         xhr.onload = () => {
           setUploadProgress(100);
+          console.log('[Upload] Response status:', xhr.status, 'Body:', xhr.responseText);
           try {
             const res = JSON.parse(xhr.responseText);
-            if (xhr.status >= 400) reject(new Error(res.detail || 'Upload failed'));
+            if (xhr.status >= 400) reject(new Error(res.detail || `Upload failed: ${xhr.status}`));
             else resolve(res.document_id);
-          } catch { reject(new Error('Upload failed')); }
+          } catch (e) { reject(new Error(`Upload parse error: ${xhr.responseText?.slice(0, 200)}`)); }
         };
-        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.onerror = () => {
+          console.error('[Upload] XHR error - status:', xhr.status, 'response:', xhr.responseText);
+          reject(new Error(`Upload network error (status ${xhr.status})`));
+        };
         const token = localStorage.getItem('pv_token');
         const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://poliq-production.up.railway.app';
         xhr.open('POST', `${apiBase}/files/direct-upload`);
