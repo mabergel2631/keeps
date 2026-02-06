@@ -29,6 +29,7 @@ from app.routes_files import router as files_router
 app = FastAPI(title="Keeps API")
 
 ALLOWED_ORIGINS = [
+    "https://keeps-jet.vercel.app",
     "https://keeps-app-six.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
