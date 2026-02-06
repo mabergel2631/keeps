@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, delete
@@ -8,6 +8,22 @@ from .auth import get_current_user
 from .db import get_db
 from .models import Policy, User
 from .models_features import RenewalReminder, Premium
+
+
+def to_date(val) -> date | None:
+    """Convert a value to a date object, handling strings from SQLite."""
+    if val is None:
+        return None
+    if isinstance(val, date) and not isinstance(val, datetime):
+        return val
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, str):
+        try:
+            return datetime.strptime(val[:10], "%Y-%m-%d").date()
+        except ValueError:
+            return None
+    return None
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
 
@@ -74,15 +90,17 @@ def smart_reminders(db: Session = Depends(get_db), user: User = Depends(get_curr
             .order_by(Premium.due_date)
         ).scalars().first()
         if overdue:
-            days_late = (today - overdue.due_date).days
-            alerts.append({
-                "type": "overdue_payment",
-                "severity": "high" if days_late > 14 else "medium",
-                "policy_id": p.id,
-                "title": f"Overdue payment: {label}",
-                "description": f"${overdue.amount / 100:.2f} was due {overdue.due_date} ({days_late} days ago)",
-                "action": "Mark as paid or make payment",
-            })
+            due = to_date(overdue.due_date)
+            if due:
+                days_late = (today - due).days
+                alerts.append({
+                    "type": "overdue_payment",
+                    "severity": "high" if days_late > 14 else "medium",
+                    "policy_id": p.id,
+                    "title": f"Overdue payment: {label}",
+                    "description": f"${overdue.amount / 100:.2f} was due {due} ({days_late} days ago)",
+                    "action": "Mark as paid or make payment",
+                })
 
         # Upcoming premium (due within 7 days)
         upcoming_prem = db.execute(
@@ -94,26 +112,29 @@ def smart_reminders(db: Session = Depends(get_db), user: User = Depends(get_curr
             .order_by(Premium.due_date)
         ).scalars().first()
         if upcoming_prem:
-            days_until = (upcoming_prem.due_date - today).days
-            alerts.append({
-                "type": "upcoming_payment",
-                "severity": "low",
-                "policy_id": p.id,
-                "title": f"Payment due soon: {label}",
-                "description": f"${upcoming_prem.amount / 100:.2f} due in {days_until} day{'s' if days_until != 1 else ''} ({upcoming_prem.due_date})",
-                "action": "Review payment",
-            })
+            due = to_date(upcoming_prem.due_date)
+            if due:
+                days_until = (due - today).days
+                alerts.append({
+                    "type": "upcoming_payment",
+                    "severity": "low",
+                    "policy_id": p.id,
+                    "title": f"Payment due soon: {label}",
+                    "description": f"${upcoming_prem.amount / 100:.2f} due in {days_until} day{'s' if days_until != 1 else ''} ({due})",
+                    "action": "Review payment",
+                })
 
         # Renewal within 30 days
-        if p.renewal_date:
-            days_to_renewal = (p.renewal_date - today).days
+        renewal = to_date(p.renewal_date)
+        if renewal:
+            days_to_renewal = (renewal - today).days
             if 0 < days_to_renewal <= 30:
                 alerts.append({
                     "type": "renewal",
                     "severity": "medium" if days_to_renewal <= 14 else "low",
                     "policy_id": p.id,
                     "title": f"Renewal approaching: {label}",
-                    "description": f"Renews in {days_to_renewal} days ({p.renewal_date}). Shop for better rates now.",
+                    "description": f"Renews in {days_to_renewal} days ({renewal}). Shop for better rates now.",
                     "action": "Review policy before renewal",
                 })
             elif days_to_renewal <= 0 and days_to_renewal > -30:
@@ -122,15 +143,15 @@ def smart_reminders(db: Session = Depends(get_db), user: User = Depends(get_curr
                     "severity": "high",
                     "policy_id": p.id,
                     "title": f"Policy may have expired: {label}",
-                    "description": f"Renewal date was {p.renewal_date} ({abs(days_to_renewal)} days ago)",
+                    "description": f"Renewal date was {renewal} ({abs(days_to_renewal)} days ago)",
                     "action": "Verify policy status with carrier",
                 })
 
         # Annual review (policy older than 11 months without update)
-        if p.created_at:
-            from datetime import datetime
-            created = p.created_at if isinstance(p.created_at, date) else p.created_at.date() if isinstance(p.created_at, datetime) else None
-            if created and (today - created).days > 335 and (today - created).days % 365 < 30:
+        created = to_date(p.created_at)
+        if created:
+            days_old = (today - created).days
+            if days_old > 335 and days_old % 365 < 30:
                 alerts.append({
                     "type": "annual_review",
                     "severity": "low",

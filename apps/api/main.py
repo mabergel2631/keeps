@@ -28,17 +28,35 @@ from app.routes_files import router as files_router
 
 app = FastAPI(title="Keeps API")
 
+ALLOWED_ORIGINS = [
+    "https://keeps-app-six.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://keeps-app-six.vercel.app",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Ensure CORS headers are sent even on unhandled exceptions."""
+    logging.exception("Unhandled error: %s", exc)
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in ALLOWED_ORIGINS:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers=headers,
+    )
 
 
 @app.on_event("startup")
