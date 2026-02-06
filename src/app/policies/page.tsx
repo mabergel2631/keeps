@@ -1,5 +1,8 @@
 'use client';
 
+// BUILD VERSION: 2026-02-06-v3 - If you don't see this in console, old code is cached
+console.log('=== KEEPS BUILD VERSION: 2026-02-06-v3 ===');
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
