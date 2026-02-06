@@ -2,10 +2,10 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str
+    database_url: str = "sqlite:///./keeps.db"
     s3_endpoint: str = "localhost:9000"
-    s3_access_key: str
-    s3_secret_key: str
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
     s3_bucket: str = "keeps"
 
     jwt_key: str = "default-secret-change-in-production"
