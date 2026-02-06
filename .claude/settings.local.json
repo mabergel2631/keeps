@@ -57,7 +57,8 @@
       "WebFetch(domain:keeps-app-six.vercel.app)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo view mabergel2631/keeps --json visibility)",
       "Bash(npm audit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }
