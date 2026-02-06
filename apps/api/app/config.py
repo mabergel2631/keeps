@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     s3_secret_key: str
     s3_bucket: str = "keeps"
 
-    jwt_secret: str = "default-secret-change-in-production"
+    jwt_key: str = "default-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 
