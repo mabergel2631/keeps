@@ -36,7 +36,7 @@ export default function Home() {
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           <h1 style={{ fontSize: 42, fontWeight: 700, margin: '0 0 16px', letterSpacing: '-0.03em' }}>{APP_NAME}</h1>
           <p style={{ fontSize: 20, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.6 }}>
-            The modern way to organize, track, and manage all your insurance policies in one secure place.
+            Preparedness starts with organization.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button
