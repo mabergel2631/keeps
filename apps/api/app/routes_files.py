@@ -15,9 +15,18 @@ UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 router = APIRouter(prefix="/files", tags=["files"])
 
 
+def _safe_path(object_key: str) -> Path:
+    """Validate path to prevent directory traversal attacks."""
+    # Resolve the path and ensure it stays within UPLOAD_DIR
+    dest = (UPLOAD_DIR / object_key).resolve()
+    if not str(dest).startswith(str(UPLOAD_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    return dest
+
+
 @router.put("/upload/{object_key:path}")
 async def upload_file(object_key: str, request: Request):
-    dest = UPLOAD_DIR / object_key
+    dest = _safe_path(object_key)
     dest.parent.mkdir(parents=True, exist_ok=True)
     body = await request.body()
     dest.write_bytes(body)
@@ -26,7 +35,7 @@ async def upload_file(object_key: str, request: Request):
 
 @router.get("/download/{object_key:path}")
 async def download_file(object_key: str):
-    path = UPLOAD_DIR / object_key
+    path = _safe_path(object_key)
     if not path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path)

@@ -233,11 +233,6 @@ def _parse_response(raw: str) -> ExtractionResult:
             description=exc.get("description", ""),
         ))
 
-    # Debug: write raw extraction to file
-    from pathlib import Path
-    debug_path = Path(__file__).resolve().parent.parent / "last_extraction.json"
-    debug_path.write_text(json.dumps(data, indent=2, default=str))
-
     premium_amount = int(data["premium_amount"]) if data.get("premium_amount") else None
 
     details = []

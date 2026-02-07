@@ -58,7 +58,8 @@
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo view mabergel2631/keeps --json visibility)",
       "Bash(npm audit:*)",
       "Bash(git push:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(find:*)"
     ]
   }
 }

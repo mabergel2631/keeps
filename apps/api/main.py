@@ -1,5 +1,6 @@
 import logging
-logging.basicConfig(level=logging.DEBUG)
+import os
+logging.basicConfig(level=logging.INFO if os.getenv("RAILWAY_ENVIRONMENT") else logging.DEBUG)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -81,11 +82,6 @@ def on_startup():
             if "expires_at" not in share_cols:
                 conn.execute(text("ALTER TABLE policy_shares ADD COLUMN expires_at DATE"))
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logging.error(f"Unhandled error: {exc}", exc_info=True)
-    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 app.include_router(files_router)
 app.include_router(auth_router)
