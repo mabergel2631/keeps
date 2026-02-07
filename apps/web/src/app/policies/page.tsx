@@ -210,8 +210,10 @@ export default function PoliciesPage() {
       {/* Delete Confirmation */}
       {deleteConfirm !== null && (
         <ConfirmDialog
+          open={true}
           title="Delete Policy"
           message="Are you sure you want to delete this policy? This cannot be undone."
+          danger={true}
           onConfirm={() => handleDelete(deleteConfirm)}
           onCancel={() => setDeleteConfirm(null)}
         />
@@ -421,7 +423,7 @@ export default function PoliciesPage() {
                     <div style={{ fontSize: 24 }}>{POLICY_TYPE_CONFIG[s.policy.policy_type]?.icon || '📋'}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>{s.policy.nickname || s.policy.carrier}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Shared by {s.owner_email} • {s.permission} access</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Shared with you • {s.permission} access</div>
                     </div>
                   </div>
                 ))}
