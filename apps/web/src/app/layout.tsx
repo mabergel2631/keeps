@@ -5,6 +5,7 @@ import './globals.css';
 import { AuthProvider } from '../../lib/auth';
 import AppShell from './components/AppShell';
 import { ToastProvider } from './components/Toast';
+import InstallPrompt from './components/InstallPrompt';
 import { APP_NAME, APP_THEME_COLOR } from './config';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon-192.svg" />
       </head>
       <body>
-        <AuthProvider><ToastProvider><AppShell>{children}</AppShell></ToastProvider></AuthProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <AppShell>{children}</AppShell>
+            <InstallPrompt />
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
