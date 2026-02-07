@@ -1,4 +1,5 @@
 'use client';
+// Landing page v2 - with navigation header and about section
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
