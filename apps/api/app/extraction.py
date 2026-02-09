@@ -233,8 +233,7 @@ def _parse_response(raw: str) -> ExtractionResult:
             description=exc.get("description", ""),
         ))
 
-    # Convert dollar amounts to cents (LLM returns dollars, database stores cents)
-    premium_amount = int(data["premium_amount"]) * 100 if data.get("premium_amount") else None
+    premium_amount = int(data["premium_amount"]) if data.get("premium_amount") else None
 
     details = []
     # Add top-level enriched fields as details
@@ -301,9 +300,8 @@ def _parse_response(raw: str) -> ExtractionResult:
         policy_number=data.get("policy_number"),
         policy_type=data.get("policy_type"),
         scope=data.get("scope"),
-        # Convert dollar amounts to cents (LLM returns dollars, database stores cents)
-        coverage_amount=int(data["coverage_amount"]) * 100 if data.get("coverage_amount") else None,
-        deductible=int(data["deductible"]) * 100 if data.get("deductible") else None,
+        coverage_amount=int(data["coverage_amount"]) if data.get("coverage_amount") else None,
+        deductible=int(data["deductible"]) if data.get("deductible") else None,
         renewal_date=data.get("renewal_date"),
         premium_amount=premium_amount,
         contacts=contacts,

@@ -675,19 +675,19 @@ export default function PolicyDetailPage() {
           {policy.coverage_amount && (
             <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Coverage Limit</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)' }}>${(policy.coverage_amount / 100).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)' }}>${policy.coverage_amount.toLocaleString()}</div>
             </div>
           )}
           {policy.deductible && (
             <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${(policy.deductible / 100).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${policy.deductible.toLocaleString()}</div>
             </div>
           )}
           {policy.premium_amount && (
             <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Annual Premium</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${(policy.premium_amount / 100).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${policy.premium_amount.toLocaleString()}</div>
             </div>
           )}
           {policy.renewal_date && (
@@ -947,10 +947,10 @@ export default function PolicyDetailPage() {
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
                     <span style={{ color: 'var(--color-text-secondary)' }}>
-                      ${(appliedAmount / 100).toLocaleString()} applied
+                      ${appliedAmount.toLocaleString()} applied
                     </span>
                     <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
-                      ${(remaining / 100).toLocaleString()} remaining
+                      ${remaining.toLocaleString()} remaining
                     </span>
                   </div>
                   <div style={{ height: 8, backgroundColor: 'var(--color-border)', borderRadius: 4, overflow: 'hidden' }}>
@@ -970,7 +970,7 @@ export default function PolicyDetailPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13 }}>
                   <div>
                     <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
-                    <div style={{ fontWeight: 600, fontSize: 16 }}>${(deductibleAmount / 100).toLocaleString()}</div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>${deductibleAmount.toLocaleString()}</div>
                   </div>
                   <div>
                     <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Type</div>
@@ -1036,10 +1036,10 @@ export default function PolicyDetailPage() {
                   <label style={labelStyle}>Amount Applied ($)</label>
                   <input
                     type="number"
-                    step="0.01"
-                    value={deductibleForm.applied / 100 || ''}
-                    onChange={e => setDeductibleForm({ ...deductibleForm, applied: Math.round(Number(e.target.value) * 100) })}
-                    placeholder="0.00"
+                    step="1"
+                    value={deductibleForm.applied || ''}
+                    onChange={e => setDeductibleForm({ ...deductibleForm, applied: Number(e.target.value) || 0 })}
+                    placeholder="0"
                     style={inputStyle}
                   />
                 </div>
