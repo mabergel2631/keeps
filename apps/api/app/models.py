@@ -28,6 +28,11 @@ class Policy(Base):
     deductible: Mapped[int | None] = mapped_column(Integer, nullable=True)
     premium_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Deductible tracking
+    deductible_type: Mapped[str | None] = mapped_column(String(20), nullable=True)  # annual, per_incident
+    deductible_period_start: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    deductible_applied: Mapped[int | None] = mapped_column(Integer, nullable=True)  # cents applied to deductible
+
     renewal_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
 
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())

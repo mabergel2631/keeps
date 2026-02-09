@@ -413,11 +413,39 @@ export default function PoliciesPage() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    {p.renewal_date && (
-                      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                        Renews {new Date(p.renewal_date).toLocaleDateString()}
-                      </div>
-                    )}
+                    {p.renewal_date && (() => {
+                      const daysUntil = Math.ceil((new Date(p.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      const isUrgent = daysUntil <= 7;
+                      const isRenewingSoon = daysUntil <= 30 && daysUntil > 7;
+                      const isPast = daysUntil < 0;
+
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                          {/* Status Badge */}
+                          {isPast ? (
+                            <span style={{ padding: '2px 8px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+                              Overdue
+                            </span>
+                          ) : isUrgent ? (
+                            <span style={{ padding: '2px 8px', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+                              Urgent
+                            </span>
+                          ) : isRenewingSoon ? (
+                            <span style={{ padding: '2px 8px', backgroundColor: '#dbeafe', color: '#1e40af', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+                              Renewing soon
+                            </span>
+                          ) : (
+                            <span style={{ padding: '2px 8px', backgroundColor: '#dcfce7', color: '#166534', borderRadius: 12, fontSize: 11, fontWeight: 500 }}>
+                              OK
+                            </span>
+                          )}
+                          {/* Date */}
+                          <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                            {new Date(p.renewal_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(p.id); }}

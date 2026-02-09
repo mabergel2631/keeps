@@ -75,6 +75,10 @@ export default function PolicyDetailPage() {
   const [shareForm, setShareForm] = useState<ShareCreate>({ shared_with_email: '', permission: 'view', role_label: null, expires_at: null });
   const { toast } = useToast();
 
+  // Deductible tracking
+  const [editingDeductible, setEditingDeductible] = useState(false);
+  const [deductibleForm, setDeductibleForm] = useState<{ type: string; period_start: string; applied: number }>({ type: 'annual', period_start: '', applied: 0 });
+
   const toggleDetailForm = () => {
     if (!showDetailForm && availableSuggestions.length > 0) {
       setDetailForm({ field_name: availableSuggestions[0], field_value: '' });
@@ -658,6 +662,84 @@ export default function PolicyDetailPage() {
         )}
       </div>
 
+      {/* Coverage Summary - Primary understanding section */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>Coverage Summary</h2>
+
+        {/* Key Figures Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 20 }}>
+          {policy.coverage_amount && (
+            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Coverage Limit</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)' }}>${(policy.coverage_amount / 100).toLocaleString()}</div>
+            </div>
+          )}
+          {policy.deductible && (
+            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${(policy.deductible / 100).toLocaleString()}</div>
+            </div>
+          )}
+          {policy.premium_amount && (
+            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Annual Premium</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${(policy.premium_amount / 100).toLocaleString()}</div>
+            </div>
+          )}
+          {policy.renewal_date && (
+            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Renewal Date</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{policy.renewal_date}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Coverage Summary - What's Covered */}
+        {coverageItems.filter(ci => ci.item_type === 'inclusion').length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#166534' }}>What&apos;s Covered</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {coverageItems.filter(ci => ci.item_type === 'inclusion').slice(0, 6).map(ci => (
+                <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#f0fdf4', color: '#166534', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
+                  {ci.description}{ci.limit && `: ${ci.limit}`}
+                </span>
+              ))}
+              {coverageItems.filter(ci => ci.item_type === 'inclusion').length > 6 && (
+                <span style={{ padding: '4px 10px', backgroundColor: '#f0f0f0', color: '#666', borderRadius: 16, fontSize: 12 }}>
+                  +{coverageItems.filter(ci => ci.item_type === 'inclusion').length - 6} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Key Exclusions Warning */}
+        {coverageItems.filter(ci => ci.item_type === 'exclusion').length > 0 && (
+          <div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Not Covered</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {coverageItems.filter(ci => ci.item_type === 'exclusion').slice(0, 4).map(ci => (
+                <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
+                  {ci.description}
+                </span>
+              ))}
+              {coverageItems.filter(ci => ci.item_type === 'exclusion').length > 4 && (
+                <span style={{ padding: '4px 10px', backgroundColor: '#f0f0f0', color: '#666', borderRadius: 16, fontSize: 12 }}>
+                  +{coverageItems.filter(ci => ci.item_type === 'exclusion').length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!policy.coverage_amount && !policy.deductible && coverageItems.length === 0 && (
+          <p style={{ color: 'var(--color-text-muted)', margin: 0, fontSize: 14 }}>
+            Upload a policy document to extract coverage details, or add them manually below.
+          </p>
+        )}
+      </div>
+
       {/* ID Card */}
       {showIdCard && (() => {
         const det: Record<string, string> = {};
@@ -788,6 +870,145 @@ export default function PolicyDetailPage() {
           </div>
         );
       })()}
+
+      {/* Deductible Tracking - Only show if policy has a deductible */}
+      {policy.deductible && policy.deductible > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h2 className="section-title" style={{ margin: 0 }}>Deductible Tracking</h2>
+            <button
+              onClick={() => {
+                if (!editingDeductible) {
+                  setDeductibleForm({
+                    type: policy.deductible_type || 'annual',
+                    period_start: policy.deductible_period_start || new Date().getFullYear() + '-01-01',
+                    applied: policy.deductible_applied || 0,
+                  });
+                }
+                setEditingDeductible(!editingDeductible);
+              }}
+              className="btn btn-outline"
+              style={{ padding: '6px 12px', fontSize: 13 }}
+            >
+              {editingDeductible ? 'Cancel' : 'Update'}
+            </button>
+          </div>
+
+          {/* Display Mode */}
+          {!editingDeductible && (() => {
+            const deductibleAmount = policy.deductible || 0;
+            const appliedAmount = policy.deductible_applied || 0;
+            const remaining = Math.max(0, deductibleAmount - appliedAmount);
+            const percentUsed = deductibleAmount > 0 ? Math.min(100, (appliedAmount / deductibleAmount) * 100) : 0;
+
+            return (
+              <div>
+                {/* Progress bar */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>
+                      ${(appliedAmount / 100).toLocaleString()} applied
+                    </span>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
+                      ${(remaining / 100).toLocaleString()} remaining
+                    </span>
+                  </div>
+                  <div style={{ height: 8, backgroundColor: 'var(--color-border)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        width: `${percentUsed}%`,
+                        height: '100%',
+                        backgroundColor: percentUsed >= 100 ? 'var(--color-success)' : 'var(--color-primary)',
+                        borderRadius: 4,
+                        transition: 'width 0.3s',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13 }}>
+                  <div>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>${(deductibleAmount / 100).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Type</div>
+                    <div style={{ fontWeight: 500 }}>{policy.deductible_type === 'per_incident' ? 'Per Incident' : 'Annual'}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Period Start</div>
+                    <div style={{ fontWeight: 500 }}>{policy.deductible_period_start || 'Not set'}</div>
+                  </div>
+                </div>
+
+                {percentUsed >= 100 && (
+                  <div style={{ marginTop: 16, padding: 12, backgroundColor: '#dcfce7', borderRadius: 'var(--radius-md)', color: '#166534', fontSize: 14, fontWeight: 500 }}>
+                    Deductible met! Claims are now fully covered up to your policy limits.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Edit Mode */}
+          {editingDeductible && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const updated = await policiesApi.update(policyId, {
+                    deductible_type: deductibleForm.type,
+                    deductible_period_start: deductibleForm.period_start || null,
+                    deductible_applied: deductibleForm.applied,
+                  });
+                  setPolicy(updated);
+                  setEditingDeductible(false);
+                  toast('Deductible tracking updated', 'success');
+                } catch (err: any) {
+                  setError(err.message);
+                }
+              }}
+              style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Deductible Type</label>
+                  <select
+                    value={deductibleForm.type}
+                    onChange={e => setDeductibleForm({ ...deductibleForm, type: e.target.value })}
+                    style={inputStyle}
+                  >
+                    <option value="annual">Annual</option>
+                    <option value="per_incident">Per Incident</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Period Start Date</label>
+                  <input
+                    type="date"
+                    value={deductibleForm.period_start}
+                    onChange={e => setDeductibleForm({ ...deductibleForm, period_start: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Amount Applied ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={deductibleForm.applied / 100 || ''}
+                    onChange={e => setDeductibleForm({ ...deductibleForm, applied: Math.round(Number(e.target.value) * 100) })}
+                    placeholder="0.00"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-accent" style={{ marginTop: 12, padding: '8px 20px' }}>Save</button>
+            </form>
+          )}
+        </div>
+      )}
 
       {/* Documents */}
       <div className="card" style={{ marginBottom: 24 }}>

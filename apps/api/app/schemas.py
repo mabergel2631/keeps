@@ -36,6 +36,10 @@ class PolicyBase(BaseModel):
     deductible: Optional[int] = None
     premium_amount: Optional[int] = None
     renewal_date: Optional[date] = None
+    # Deductible tracking
+    deductible_type: Optional[str] = None  # annual, per_incident
+    deductible_period_start: Optional[date] = None
+    deductible_applied: Optional[int] = None  # cents applied to deductible
 
 
 class PolicyCreate(PolicyBase):
@@ -52,6 +56,10 @@ class PolicyUpdate(BaseModel):
     deductible: Optional[int] = None
     premium_amount: Optional[int] = None
     renewal_date: Optional[date] = None
+    # Deductible tracking
+    deductible_type: Optional[str] = None
+    deductible_period_start: Optional[date] = None
+    deductible_applied: Optional[int] = None
 
 
 class PolicyOut(PolicyBase):

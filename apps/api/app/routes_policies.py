@@ -64,6 +64,10 @@ def list_policies(db: Session = Depends(get_db), user: User = Depends(get_curren
             "key_contacts": key_contacts,
             "key_details": key_details,
             "shared_with": shared_with,
+            # Deductible tracking
+            "deductible_type": p.deductible_type,
+            "deductible_period_start": str(p.deductible_period_start) if p.deductible_period_start else None,
+            "deductible_applied": p.deductible_applied,
         })
 
     return result

@@ -62,6 +62,10 @@ export type Policy = {
   key_contacts?: Record<string, KeyContact>;
   key_details?: Record<string, string>;
   shared_with?: string[];
+  // Deductible tracking
+  deductible_type?: string | null;  // annual, per_incident
+  deductible_period_start?: string | null;
+  deductible_applied?: number | null;  // cents applied to deductible
 };
 
 export type PolicyCreate = {
@@ -74,6 +78,10 @@ export type PolicyCreate = {
   deductible?: number | null;
   premium_amount?: number | null;
   renewal_date?: string | null;
+  // Deductible tracking
+  deductible_type?: string | null;
+  deductible_period_start?: string | null;
+  deductible_applied?: number | null;
 };
 
 export type PolicyUpdate = Partial<PolicyCreate>;
