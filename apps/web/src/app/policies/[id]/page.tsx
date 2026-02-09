@@ -79,6 +79,10 @@ export default function PolicyDetailPage() {
   const [editingDeductible, setEditingDeductible] = useState(false);
   const [deductibleForm, setDeductibleForm] = useState<{ type: string; period_start: string; applied: number }>({ type: 'annual', period_start: '', applied: 0 });
 
+  // Coverage summary expansion
+  const [showAllInclusions, setShowAllInclusions] = useState(false);
+  const [showAllExclusions, setShowAllExclusions] = useState(false);
+
   const toggleDetailForm = () => {
     if (!showDetailForm && availableSuggestions.length > 0) {
       setDetailForm({ field_name: availableSuggestions[0], field_value: '' });
@@ -695,42 +699,78 @@ export default function PolicyDetailPage() {
         </div>
 
         {/* Quick Coverage Summary - What's Covered */}
-        {coverageItems.filter(ci => ci.item_type === 'inclusion').length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#166534' }}>What&apos;s Covered</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {coverageItems.filter(ci => ci.item_type === 'inclusion').slice(0, 6).map(ci => (
-                <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#f0fdf4', color: '#166534', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
-                  {ci.description}{ci.limit && `: ${ci.limit}`}
-                </span>
-              ))}
-              {coverageItems.filter(ci => ci.item_type === 'inclusion').length > 6 && (
-                <span style={{ padding: '4px 10px', backgroundColor: '#f0f0f0', color: '#666', borderRadius: 16, fontSize: 12 }}>
-                  +{coverageItems.filter(ci => ci.item_type === 'inclusion').length - 6} more
-                </span>
-              )}
+        {coverageItems.filter(ci => ci.item_type === 'inclusion').length > 0 && (() => {
+          const inclusions = coverageItems.filter(ci => ci.item_type === 'inclusion');
+          const displayCount = showAllInclusions ? inclusions.length : 6;
+          const hasMore = inclusions.length > 6;
+
+          return (
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#166534' }}>What&apos;s Covered</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {inclusions.slice(0, displayCount).map(ci => (
+                  <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#f0fdf4', color: '#166534', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
+                    {ci.description}{ci.limit && `: ${ci.limit}`}
+                  </span>
+                ))}
+                {hasMore && (
+                  <button
+                    onClick={() => setShowAllInclusions(!showAllInclusions)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#e0e7ff',
+                      color: '#3730a3',
+                      borderRadius: 16,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showAllInclusions ? 'Show less' : `+${inclusions.length - 6} more`}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Key Exclusions Warning */}
-        {coverageItems.filter(ci => ci.item_type === 'exclusion').length > 0 && (
-          <div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Not Covered</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {coverageItems.filter(ci => ci.item_type === 'exclusion').slice(0, 4).map(ci => (
-                <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
-                  {ci.description}
-                </span>
-              ))}
-              {coverageItems.filter(ci => ci.item_type === 'exclusion').length > 4 && (
-                <span style={{ padding: '4px 10px', backgroundColor: '#f0f0f0', color: '#666', borderRadius: 16, fontSize: 12 }}>
-                  +{coverageItems.filter(ci => ci.item_type === 'exclusion').length - 4} more
-                </span>
-              )}
+        {coverageItems.filter(ci => ci.item_type === 'exclusion').length > 0 && (() => {
+          const exclusions = coverageItems.filter(ci => ci.item_type === 'exclusion');
+          const displayCount = showAllExclusions ? exclusions.length : 4;
+          const hasMore = exclusions.length > 4;
+
+          return (
+            <div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Not Covered</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {exclusions.slice(0, displayCount).map(ci => (
+                  <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
+                    {ci.description}
+                  </span>
+                ))}
+                {hasMore && (
+                  <button
+                    onClick={() => setShowAllExclusions(!showAllExclusions)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#fce7f3',
+                      color: '#9d174d',
+                      borderRadius: 16,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showAllExclusions ? 'Show less' : `+${exclusions.length - 4} more`}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Empty state */}
         {!policy.coverage_amount && !policy.deductible && coverageItems.length === 0 && (
