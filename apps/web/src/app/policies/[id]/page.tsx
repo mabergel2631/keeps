@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
-import { policiesApi, contactsApi, documentsApi, coverageApi, policyDetailsApi, premiumsApi, claimsApi, sharingApi, exportApi, Policy, Contact, DocMeta, ContactCreate, ExtractionData, CoverageItem, CoverageItemCreate, PolicyDetail, PolicyDetailCreate, PolicyUpdate, Premium, PremiumCreate, Claim, ClaimCreate, PolicyShareType, ShareCreate } from '../../../../lib/api';
+import { policiesApi, contactsApi, documentsApi, coverageApi, policyDetailsApi, premiumsApi, claimsApi, sharingApi, exportApi, premiumHistoryApi, Policy, Contact, DocMeta, ContactCreate, ExtractionData, CoverageItem, CoverageItemCreate, PolicyDetail, PolicyDetailCreate, PolicyUpdate, Premium, PremiumCreate, Claim, ClaimCreate, PolicyShareType, ShareCreate, PremiumHistoryEntry } from '../../../../lib/api';
 import { useToast } from '../../components/Toast';
 import { Skeleton } from '../../components/Skeleton';
 
@@ -83,6 +83,15 @@ export default function PolicyDetailPage() {
   const [showAllInclusions, setShowAllInclusions] = useState(false);
   const [showAllExclusions, setShowAllExclusions] = useState(false);
 
+  // Premium history
+  const [premiumHistory, setPremiumHistory] = useState<PremiumHistoryEntry[]>([]);
+  const [premiumHistoryChange, setPremiumHistoryChange] = useState<number>(0);
+  const [showAddPremiumHistory, setShowAddPremiumHistory] = useState(false);
+  const [premiumHistoryForm, setPremiumHistoryForm] = useState({ amount: 0, effective_date: '' });
+
+  // Claims quick-start
+  const [copiedPolicyNumber, setCopiedPolicyNumber] = useState(false);
+
   const toggleDetailForm = () => {
     if (!showDetailForm && availableSuggestions.length > 0) {
       setDetailForm({ field_name: availableSuggestions[0], field_value: '' });
@@ -113,7 +122,7 @@ export default function PolicyDetailPage() {
 
   const loadAll = async () => {
     try {
-      const [p, c, d, cv, det, prem, cl, sh] = await Promise.all([
+      const [p, c, d, cv, det, prem, cl, sh, ph] = await Promise.all([
         policiesApi.get(policyId),
         contactsApi.list(policyId),
         documentsApi.list(policyId),
@@ -122,6 +131,7 @@ export default function PolicyDetailPage() {
         premiumsApi.list(policyId),
         claimsApi.list(policyId),
         sharingApi.listShares(policyId).catch(() => [] as PolicyShareType[]),
+        premiumHistoryApi.list(policyId).catch(() => ({ history: [], total_change_pct: 0, entry_count: 0 })),
       ]);
       setPolicy(p);
       setContacts(c);
@@ -131,6 +141,8 @@ export default function PolicyDetailPage() {
       setPremiums(prem);
       setClaims(cl);
       setShares(sh);
+      setPremiumHistory(ph.history);
+      setPremiumHistoryChange(ph.total_change_pct);
     } catch (err: any) {
       if (err.status === 401) { logout(); router.replace('/login'); return; }
       setError(err.message);
@@ -1046,6 +1058,241 @@ export default function PolicyDetailPage() {
               </div>
               <button type="submit" className="btn btn-accent" style={{ marginTop: 12, padding: '8px 20px' }}>Save</button>
             </form>
+          )}
+        </div>
+      )}
+
+      {/* Claims Quick-Start */}
+      {(() => {
+        const claimsContact = contacts.find(c => c.role === 'claims') || contacts.find(c => c.role === 'customer_service');
+        if (!claimsContact?.phone) return null;
+
+        return (
+          <div className="card" style={{ marginBottom: 24, background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fecaca' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <div>
+                <h2 style={{ margin: '0 0 4px', fontSize: 18, color: '#991b1b' }}>🚨 Need to File a Claim?</h2>
+                <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>Start your claim with policy info ready to go</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div style={{ padding: 16, backgroundColor: '#fff', borderRadius: 8, border: '1px solid #fecaca' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#991b1b', textTransform: 'uppercase', marginBottom: 6 }}>Policy Number</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 600 }}>{policy.policy_number}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(policy.policy_number);
+                      setCopiedPolicyNumber(true);
+                      setTimeout(() => setCopiedPolicyNumber(false), 2000);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: 11,
+                      backgroundColor: copiedPolicyNumber ? '#22c55e' : '#f3f4f6',
+                      color: copiedPolicyNumber ? '#fff' : '#374151',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {copiedPolicyNumber ? '✓ Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+              <div style={{ padding: 16, backgroundColor: '#fff', borderRadius: 8, border: '1px solid #fecaca' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#991b1b', textTransform: 'uppercase', marginBottom: 6 }}>Coverage Limit</div>
+                <div style={{ fontSize: 16, fontWeight: 600 }}>
+                  {policy.coverage_amount ? `$${policy.coverage_amount.toLocaleString()}` : 'See policy'}
+                </div>
+              </div>
+            </div>
+
+            <a
+              href={`tel:${claimsContact.phone.replace(/[^\d+]/g, '')}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '14px 24px',
+                backgroundColor: '#dc2626',
+                color: '#fff',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontSize: 16,
+                fontWeight: 600,
+              }}
+            >
+              📞 Call Claims: {claimsContact.phone}
+            </a>
+
+            {policy.deductible && (
+              <p style={{ margin: '12px 0 0', fontSize: 12, color: '#991b1b', textAlign: 'center' }}>
+                Remember: Your deductible is ${policy.deductible.toLocaleString()}
+              </p>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Premium History */}
+      {(premiumHistory.length > 0 || policy.premium_amount) && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <h2 className="section-title" style={{ margin: 0 }}>Premium History</h2>
+              {premiumHistoryChange !== 0 && (
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: premiumHistoryChange > 0 ? '#dc2626' : '#16a34a' }}>
+                  {premiumHistoryChange > 0 ? '↑' : '↓'} {Math.abs(premiumHistoryChange)}% total change
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setShowAddPremiumHistory(!showAddPremiumHistory)}
+              className="btn btn-outline"
+              style={{ padding: '6px 12px', fontSize: 13 }}
+            >
+              {showAddPremiumHistory ? 'Cancel' : '+ Add Entry'}
+            </button>
+          </div>
+
+          {/* Add Premium History Form */}
+          {showAddPremiumHistory && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await premiumHistoryApi.add(policyId, premiumHistoryForm.amount, premiumHistoryForm.effective_date);
+                  const result = await premiumHistoryApi.list(policyId);
+                  setPremiumHistory(result.history);
+                  setPremiumHistoryChange(result.total_change_pct);
+                  setShowAddPremiumHistory(false);
+                  setPremiumHistoryForm({ amount: 0, effective_date: '' });
+                  toast('Premium history added', 'success');
+                } catch (err: any) {
+                  setError(err.message);
+                }
+              }}
+              style={{ padding: 16, marginBottom: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Annual Premium ($)</label>
+                  <input
+                    type="number"
+                    required
+                    value={premiumHistoryForm.amount || ''}
+                    onChange={e => setPremiumHistoryForm({ ...premiumHistoryForm, amount: Number(e.target.value) })}
+                    placeholder="e.g., 1200"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Effective Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={premiumHistoryForm.effective_date}
+                    onChange={e => setPremiumHistoryForm({ ...premiumHistoryForm, effective_date: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-accent" style={{ marginTop: 12, padding: '8px 20px' }}>
+                Add Entry
+              </button>
+            </form>
+          )}
+
+          {/* Premium Trend Chart */}
+          {premiumHistory.length > 1 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 80, padding: '0 4px' }}>
+                {premiumHistory.map((entry, i) => {
+                  const maxAmount = Math.max(...premiumHistory.map(e => e.amount));
+                  const height = maxAmount > 0 ? (entry.amount / maxAmount) * 100 : 0;
+                  const isIncrease = i > 0 && entry.amount > premiumHistory[i - 1].amount;
+                  const isDecrease = i > 0 && entry.amount < premiumHistory[i - 1].amount;
+
+                  return (
+                    <div key={entry.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div
+                        style={{
+                          width: '100%',
+                          maxWidth: 40,
+                          height: `${height}%`,
+                          backgroundColor: isIncrease ? '#fecaca' : isDecrease ? '#bbf7d0' : '#dbeafe',
+                          borderRadius: '4px 4px 0 0',
+                          minHeight: 4,
+                        }}
+                        title={`$${entry.amount.toLocaleString()} - ${entry.effective_date}`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--color-text-muted)' }}>
+                <span>{premiumHistory[0]?.effective_date}</span>
+                <span>{premiumHistory[premiumHistory.length - 1]?.effective_date}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Premium History List */}
+          {premiumHistory.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {premiumHistory.slice().reverse().map((entry, i) => (
+                <div
+                  key={entry.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    backgroundColor: 'var(--color-bg)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>${entry.amount.toLocaleString()}/year</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                      Effective: {entry.effective_date}
+                      {entry.source !== 'manual' && (
+                        <span style={{ marginLeft: 8, fontSize: 10, color: '#6b7280' }}>({entry.source})</span>
+                      )}
+                    </div>
+                  </div>
+                  {entry.change_pct !== null && entry.change_pct !== undefined && (
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      backgroundColor: entry.change_pct > 0 ? '#fef2f2' : entry.change_pct < 0 ? '#f0fdf4' : '#f3f4f6',
+                      color: entry.change_pct > 0 ? '#dc2626' : entry.change_pct < 0 ? '#16a34a' : '#6b7280',
+                    }}>
+                      {entry.change_pct > 0 ? '+' : ''}{entry.change_pct}%
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : policy.premium_amount ? (
+            <div style={{ textAlign: 'center', padding: 20, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+                Current premium: <strong>${policy.premium_amount.toLocaleString()}/year</strong>
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                Add historical entries to track premium changes over time
+              </p>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 14, textAlign: 'center', padding: 16 }}>
+              No premium history recorded. Add entries to track price changes.
+            </p>
           )}
         </div>
       )}

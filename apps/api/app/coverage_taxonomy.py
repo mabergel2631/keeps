@@ -376,6 +376,69 @@ def analyze_coverage_gaps(
             except (ValueError, TypeError):
                 pass
 
+    # Check for stale home coverage (not updated in 3+ years - construction costs rise ~5-10% annually)
+    for policy in policies:
+        ptype = (policy.get("policy_type") or "").lower()
+        if ptype == "home":
+            created = policy.get("created_at")
+            renewal = policy.get("renewal_date")
+
+            # Check if dwelling coverage might be outdated
+            coverage = policy.get("coverage_amount") or 0
+            if coverage > 0:
+                # Simple heuristic: if home policy was created 3+ years ago, coverage may need review
+                # In real world, would compare to local rebuild cost indices
+                try:
+                    if created:
+                        created_date = datetime.strptime(str(created)[:10], "%Y-%m-%d").date()
+                        years_old = (now - created_date).days / 365
+                        if years_old >= 3:
+                            estimated_increase = int(years_old * 7)  # ~7% annual construction cost increase
+                            gaps.append({
+                                "id": f"stale_home_coverage_{policy.get('id')}",
+                                "name": "Home Coverage Review Needed",
+                                "severity": "medium",
+                                "description": f"Your home coverage (${coverage:,}) hasn't been reviewed in {int(years_old)} years. Construction costs have risen ~{estimated_increase}% since then.",
+                                "recommendation": "Contact your agent to review dwelling coverage. You may be underinsured if rebuild costs have increased.",
+                                "category": "dwelling_coverage",
+                                "policy_id": policy.get("id")
+                            })
+                except (ValueError, TypeError):
+                    pass
+
+    # Check for missing claims contact (preparedness warning)
+    for policy in policies:
+        contacts = policy.get("contacts", [])
+        has_claims_contact = any(
+            c.get("role") in ("claims", "customer_service") and c.get("phone")
+            for c in contacts
+        )
+        if not has_claims_contact and policy.get("carrier") != "Pending extraction...":
+            gaps.append({
+                "id": f"no_claims_contact_{policy.get('id')}",
+                "name": "Missing Claims Contact",
+                "severity": "low",
+                "description": f"Your {policy.get('carrier', 'policy')} policy has no claims phone number on file.",
+                "recommendation": "Add the claims phone number so you're ready if you need to file a claim.",
+                "category": "preparedness",
+                "policy_id": policy.get("id")
+            })
+
+    # Check for policies with no coverage amount specified
+    for policy in policies:
+        if not policy.get("coverage_amount") and policy.get("carrier") != "Pending extraction...":
+            ptype = policy.get("policy_type", "")
+            if ptype in ("auto", "home", "umbrella", "liability"):
+                gaps.append({
+                    "id": f"unknown_coverage_{policy.get('id')}",
+                    "name": "Unknown Coverage Limit",
+                    "severity": "low",
+                    "description": f"Your {policy.get('carrier', 'policy')} {ptype} policy has no coverage limit recorded.",
+                    "recommendation": "Add your coverage limit to better understand your protection level.",
+                    "category": "incomplete_data",
+                    "policy_id": policy.get("id")
+                })
+
     # Sort by severity
     severity_order = {"high": 0, "medium": 1, "low": 2, "info": 3}
     gaps.sort(key=lambda g: severity_order.get(g["severity"], 4))

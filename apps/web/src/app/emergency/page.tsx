@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { policiesApi, contactsApi, documentsApi, policyDetailsApi, Policy, Contact, DocMeta, PolicyDetail } from '../../../lib/api';
+import { policiesApi, contactsApi, documentsApi, policyDetailsApi, iceApi, Policy, Contact, DocMeta, PolicyDetail, EmergencyCardData } from '../../../lib/api';
 import { PolicyListSkeleton } from '../components/Skeleton';
+import { APP_NAME } from '../config';
 
 type PolicyEmergencyData = {
   policy: Policy;
@@ -21,6 +22,19 @@ export default function EmergencyPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  // ICE Card state
+  const [iceCard, setIceCard] = useState<EmergencyCardData | null>(null);
+  const [showIceSetup, setShowIceSetup] = useState(false);
+  const [iceForm, setIceForm] = useState({
+    holder_name: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    pin: '',
+    include_coverage_amounts: true,
+    include_deductibles: true,
+  });
+  const [iceSaving, setIceSaving] = useState(false);
+
   useEffect(() => {
     if (!token) { router.replace('/login'); return; }
     loadAll();
@@ -28,7 +42,13 @@ export default function EmergencyPage() {
 
   const loadAll = async () => {
     try {
-      const policies = await policiesApi.list();
+      const [policies, iceResult] = await Promise.all([
+        policiesApi.list(),
+        iceApi.get().catch(() => ({ card: null })),
+      ]);
+
+      setIceCard(iceResult.card);
+
       const all = await Promise.all(
         policies.map(async (p) => {
           const [contacts, docs, details] = await Promise.all([
@@ -73,6 +93,67 @@ export default function EmergencyPage() {
     } catch {}
   };
 
+  // ICE Card handlers
+  const handleCreateIceCard = async () => {
+    if (!iceForm.holder_name.trim()) return;
+    setIceSaving(true);
+    try {
+      const result = await iceApi.create({
+        holder_name: iceForm.holder_name,
+        emergency_contact_name: iceForm.emergency_contact_name || undefined,
+        emergency_contact_phone: iceForm.emergency_contact_phone || undefined,
+        pin: iceForm.pin || undefined,
+        include_coverage_amounts: iceForm.include_coverage_amounts,
+        include_deductibles: iceForm.include_deductibles,
+      });
+      const { card } = await iceApi.get();
+      setIceCard(card);
+      setShowIceSetup(false);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIceSaving(false);
+    }
+  };
+
+  const handleRegenerateCode = async () => {
+    if (!confirm('This will invalidate the old link. Anyone with the old link will no longer be able to access your emergency card. Continue?')) return;
+    try {
+      await iceApi.regenerate();
+      const { card } = await iceApi.get();
+      setIceCard(card);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleToggleIceCard = async () => {
+    if (!iceCard) return;
+    try {
+      await iceApi.update({ is_active: !iceCard.is_active });
+      const { card } = await iceApi.get();
+      setIceCard(card);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteIceCard = async () => {
+    if (!confirm('Delete your emergency card? This cannot be undone.')) return;
+    try {
+      await iceApi.delete();
+      setIceCard(null);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const getShareUrl = () => {
+    if (!iceCard) return '';
+    const base = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${base}/ice/${iceCard.access_code}`;
+  };
+
   if (!token) return null;
 
   return (
@@ -103,6 +184,249 @@ export default function EmergencyPage() {
         </div>
       )}
 
+      {/* ICE Card Section */}
+      <div className="card" style={{ padding: 0, marginBottom: 24, overflow: 'hidden' }}>
+        <div style={{
+          padding: '16px 20px',
+          backgroundColor: '#fef2f2',
+          borderBottom: '1px solid #fecaca',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#991b1b' }}>
+              🆘 ICE Card (In Case of Emergency)
+            </h2>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#b91c1c' }}>
+              A shareable link for family members to access your insurance info without logging in
+            </p>
+          </div>
+        </div>
+
+        <div style={{ padding: 20 }}>
+          {!iceCard && !showIceSetup && (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+                Create an emergency card that family members can access if something happens to you.
+              </p>
+              <button
+                onClick={() => setShowIceSetup(true)}
+                className="btn btn-accent"
+                style={{ padding: '12px 24px', fontSize: 15, fontWeight: 600 }}
+              >
+                Create Emergency Card
+              </button>
+            </div>
+          )}
+
+          {showIceSetup && !iceCard && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 6 }}>
+                  Your Name (shown on card) *
+                </label>
+                <input
+                  type="text"
+                  value={iceForm.holder_name}
+                  onChange={(e) => setIceForm({ ...iceForm, holder_name: e.target.value })}
+                  placeholder="e.g., John Smith"
+                  className="form-input"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 6 }}>
+                  Emergency Contact Name
+                </label>
+                <input
+                  type="text"
+                  value={iceForm.emergency_contact_name}
+                  onChange={(e) => setIceForm({ ...iceForm, emergency_contact_name: e.target.value })}
+                  placeholder="e.g., Jane Smith (Spouse)"
+                  className="form-input"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 6 }}>
+                  Emergency Contact Phone
+                </label>
+                <input
+                  type="tel"
+                  value={iceForm.emergency_contact_phone}
+                  onChange={(e) => setIceForm({ ...iceForm, emergency_contact_phone: e.target.value })}
+                  placeholder="(555) 123-4567"
+                  className="form-input"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 6 }}>
+                  PIN Protection (optional)
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={iceForm.pin}
+                  onChange={(e) => setIceForm({ ...iceForm, pin: e.target.value.replace(/\D/g, '') })}
+                  placeholder="4-6 digit PIN"
+                  className="form-input"
+                  style={{ width: 150 }}
+                />
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>
+                  If set, viewers must enter this PIN to see your card
+                </p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, cursor: 'pointer', marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={iceForm.include_coverage_amounts}
+                    onChange={(e) => setIceForm({ ...iceForm, include_coverage_amounts: e.target.checked })}
+                  />
+                  Show coverage amounts
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={iceForm.include_deductibles}
+                    onChange={(e) => setIceForm({ ...iceForm, include_deductibles: e.target.checked })}
+                  />
+                  Show deductibles
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={handleCreateIceCard}
+                  disabled={!iceForm.holder_name.trim() || iceSaving}
+                  className="btn btn-accent"
+                  style={{ padding: '10px 20px' }}
+                >
+                  {iceSaving ? 'Creating...' : 'Create Card'}
+                </button>
+                <button
+                  onClick={() => setShowIceSetup(false)}
+                  className="btn btn-outline"
+                  style={{ padding: '10px 20px' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {iceCard && (
+            <div>
+              <div style={{
+                padding: 16,
+                backgroundColor: iceCard.is_active ? '#f0fdf4' : '#f3f4f6',
+                borderRadius: 8,
+                marginBottom: 16,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      backgroundColor: iceCard.is_active ? '#dcfce7' : '#e5e7eb',
+                      color: iceCard.is_active ? '#166534' : '#6b7280',
+                    }}>
+                      {iceCard.is_active ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                    {iceCard.has_pin && (
+                      <span style={{
+                        marginLeft: 8,
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        backgroundColor: '#dbeafe',
+                        color: '#1d4ed8',
+                      }}>
+                        🔐 PIN Protected
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                    For: {iceCard.holder_name}
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                    Shareable Link
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={getShareUrl()}
+                      className="form-input"
+                      style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }}
+                    />
+                    <button
+                      onClick={() => copyToClipboard(getShareUrl(), 'Emergency Card Link')}
+                      className="btn btn-primary"
+                      style={{ padding: '8px 16px' }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {iceCard.emergency_contact_name && (
+                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: '8px 0 0' }}>
+                    Emergency Contact: {iceCard.emergency_contact_name}
+                    {iceCard.emergency_contact_phone && ` - ${iceCard.emergency_contact_phone}`}
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => window.open(getShareUrl(), '_blank')}
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                >
+                  Preview Card
+                </button>
+                <button
+                  onClick={handleToggleIceCard}
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                >
+                  {iceCard.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+                <button
+                  onClick={handleRegenerateCode}
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                >
+                  New Link
+                </button>
+                <button
+                  onClick={handleDeleteIceCard}
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13, color: '#dc2626', borderColor: '#dc2626' }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Policy List */}
       {loading ? (
         <PolicyListSkeleton />
       ) : data.length === 0 ? (
@@ -209,7 +533,7 @@ export default function EmergencyPage() {
                           className="btn btn-accent"
                           style={{ textDecoration: 'none', padding: '10px 16px', fontSize: 14, fontWeight: 600 }}
                         >
-                          Call Claims
+                          📞 Call Claims
                         </a>
                       )}
                       {idCard && (

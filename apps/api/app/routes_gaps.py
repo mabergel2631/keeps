@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from .auth import get_current_user
 from .db import get_db
-from .models import Policy, PolicyDetail, User
+from .models import Policy, PolicyDetail, Contact, User
 from .coverage_taxonomy import analyze_coverage_gaps, get_coverage_summary
 
 router = APIRouter(prefix="/gaps", tags=["gap-analysis"])
@@ -25,11 +25,15 @@ def get_gap_analysis(db: Session = Depends(get_db), user: User = Depends(get_cur
         select(Policy).where(Policy.user_id == user.id)
     ).scalars().all()
 
-    # Build policy dicts with details
+    # Build policy dicts with details and contacts
     policy_data = []
     for p in policies:
         details = db.execute(
             select(PolicyDetail).where(PolicyDetail.policy_id == p.id)
+        ).scalars().all()
+
+        contacts = db.execute(
+            select(Contact).where(Contact.policy_id == p.id)
         ).scalars().all()
 
         policy_data.append({
@@ -41,7 +45,9 @@ def get_gap_analysis(db: Session = Depends(get_db), user: User = Depends(get_cur
             "deductible": p.deductible,
             "premium_amount": p.premium_amount,
             "renewal_date": str(p.renewal_date) if p.renewal_date else None,
-            "details": [{"field_name": d.field_name, "field_value": d.field_value} for d in details]
+            "created_at": str(p.created_at) if p.created_at else None,
+            "details": [{"field_name": d.field_name, "field_value": d.field_value} for d in details],
+            "contacts": [{"role": c.role, "phone": c.phone, "email": c.email} for c in contacts]
         })
 
     # TODO: In the future, we could store user context (has_dependents, is_homeowner, etc.)

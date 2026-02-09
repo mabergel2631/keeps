@@ -67,3 +67,35 @@ class PolicyShare(Base):
     expires_at: Mapped[Date | None] = mapped_column(Date, nullable=True)
     accepted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class EmergencyCard(Base):
+    """ICE (In Case of Emergency) shareable card with policy essentials."""
+    __tablename__ = "emergency_cards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    access_code: Mapped[str] = mapped_column(String(20), unique=True, index=True)  # URL-safe random code
+    pin_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Optional PIN protection
+    holder_name: Mapped[str] = mapped_column(String(200))  # Name displayed on card
+    emergency_contact_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    emergency_contact_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    include_coverage_amounts: Mapped[bool] = mapped_column(Boolean, default=True)
+    include_deductibles: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class PremiumHistory(Base):
+    """Track premium changes over time for price trend analysis."""
+    __tablename__ = "premium_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    policy_id: Mapped[int] = mapped_column(Integer, ForeignKey("policies.id", ondelete="CASCADE"), index=True)
+    amount: Mapped[int] = mapped_column(Integer)  # dollars (annual premium)
+    effective_date: Mapped[Date] = mapped_column(Date)  # When this premium took effect
+    source: Mapped[str] = mapped_column(String(20), default="manual")  # manual, extraction, renewal
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())

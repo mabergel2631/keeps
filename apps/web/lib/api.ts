@@ -641,3 +641,127 @@ export const gapsApi = {
     return request<CoverageSummary>("/gaps/summary");
   },
 };
+
+// ── ICE Emergency Card API ─────────────────────────────
+
+export type EmergencyCardData = {
+  id: number;
+  access_code: string;
+  holder_name: string;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  has_pin: boolean;
+  include_coverage_amounts: boolean;
+  include_deductibles: boolean;
+  expires_at?: string | null;
+  is_active: boolean;
+  created_at: string;
+  share_url: string;
+};
+
+export type EmergencyCardCreate = {
+  holder_name: string;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  pin?: string | null;
+  include_coverage_amounts?: boolean;
+  include_deductibles?: boolean;
+  expires_at?: string | null;
+};
+
+export type EmergencyCardPublic = {
+  requires_pin: boolean;
+  holder_name: string;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  policies?: {
+    id: number;
+    policy_type: string;
+    carrier: string;
+    policy_number: string;
+    claims_phone?: string | null;
+    agent_name?: string | null;
+    agent_phone?: string | null;
+    coverage_amount?: number | null;
+    deductible?: number | null;
+  }[];
+  last_updated?: string;
+};
+
+export const iceApi = {
+  get(): Promise<{ card: EmergencyCardData | null }> {
+    return request<{ card: EmergencyCardData | null }>("/emergency-card");
+  },
+  create(payload: EmergencyCardCreate): Promise<{ id: number; access_code: string; share_url: string }> {
+    return request<{ id: number; access_code: string; share_url: string }>("/emergency-card", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+  update(payload: Partial<EmergencyCardCreate> & { remove_pin?: boolean; is_active?: boolean }): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>("/emergency-card", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+  regenerate(): Promise<{ access_code: string; share_url: string }> {
+    return request<{ access_code: string; share_url: string }>("/emergency-card/regenerate", { method: "POST" });
+  },
+  delete(): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>("/emergency-card", { method: "DELETE" });
+  },
+  // Public endpoints (no auth)
+  getPublic(accessCode: string): Promise<EmergencyCardPublic> {
+    return request<EmergencyCardPublic>(`/ice/${accessCode}`);
+  },
+  verifyPin(accessCode: string, pin: string): Promise<EmergencyCardPublic> {
+    return request<EmergencyCardPublic>(`/ice/${accessCode}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin }),
+    });
+  },
+};
+
+// ── Premium History API ─────────────────────────────────
+
+export type PremiumHistoryEntry = {
+  id: number;
+  amount: number;
+  effective_date: string;
+  source: string;
+  notes?: string | null;
+  change_pct?: number | null;
+  created_at: string;
+};
+
+export type PremiumHistoryResult = {
+  history: PremiumHistoryEntry[];
+  total_change_pct: number;
+  entry_count: number;
+};
+
+export const premiumHistoryApi = {
+  list(policyId: number): Promise<PremiumHistoryResult> {
+    return request<PremiumHistoryResult>(`/policies/${policyId}/premium-history`);
+  },
+  add(policyId: number, amount: number, effective_date: string, notes?: string): Promise<{ id: number }> {
+    return request<{ id: number }>(`/policies/${policyId}/premium-history`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, effective_date, notes }),
+    });
+  },
+  update(policyId: number, entryId: number, payload: { amount?: number; effective_date?: string; notes?: string }): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/policies/${policyId}/premium-history/${entryId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+  remove(policyId: number, entryId: number): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/policies/${policyId}/premium-history/${entryId}`, { method: "DELETE" });
+  },
+};
