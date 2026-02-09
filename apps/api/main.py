@@ -26,6 +26,7 @@ from app.routes_reminders import router as reminders_router
 from app.routes_export import router as export_router
 from app.routes_sharing import router as sharing_router
 from app.routes_files import router as files_router
+from app.routes_gaps import router as gaps_router
 
 app = FastAPI(title="Keeps API")
 
@@ -98,3 +99,4 @@ app.include_router(policy_details_router)
 app.include_router(premiums_router)
 app.include_router(claims_router)
 app.include_router(reminders_router)
+app.include_router(gaps_router)

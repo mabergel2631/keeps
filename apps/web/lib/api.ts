@@ -604,3 +604,40 @@ export const exportApi = {
   allPolicies() { return downloadFile("/export/policies", "policies.csv"); },
   singlePolicy(policyId: number) { return downloadFile(`/export/policies/${policyId}`, `policy_${policyId}.csv`); },
 };
+
+// ── Gap Analysis API ─────────────────────────────────
+
+export type CoverageGap = {
+  id: string;
+  name: string;
+  severity: "high" | "medium" | "low" | "info";
+  description: string;
+  recommendation: string;
+  category: string;
+  policy_id?: number;
+};
+
+export type CoverageSummary = {
+  total_policies: number;
+  policy_types: string[];
+  total_coverage: number;
+  total_annual_premium: number;
+  coverage_by_type: Record<string, { coverage: number; premium: number; count: number }>;
+  covered_categories: string[];
+  missing_categories: string[];
+};
+
+export type GapAnalysisResult = {
+  gaps: CoverageGap[];
+  summary: CoverageSummary;
+  policy_count: number;
+};
+
+export const gapsApi = {
+  analyze(): Promise<GapAnalysisResult> {
+    return request<GapAnalysisResult>("/gaps");
+  },
+  summary(): Promise<CoverageSummary> {
+    return request<CoverageSummary>("/gaps/summary");
+  },
+};

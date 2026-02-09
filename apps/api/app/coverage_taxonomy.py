@@ -1,0 +1,430 @@
+"""
+Coverage taxonomy for gap analysis.
+Defines coverage categories, what policies provide them, and rules for identifying gaps.
+"""
+
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class CoverageCategory:
+    """A category of protection (e.g., liability, property damage)."""
+    id: str
+    name: str
+    description: str
+    importance: str  # "critical", "important", "recommended"
+    typical_sources: list[str]  # policy types that typically provide this
+
+
+@dataclass
+class GapRule:
+    """A rule for detecting coverage gaps."""
+    id: str
+    name: str
+    description: str
+    severity: str  # "high", "medium", "low"
+    condition: str  # description of when this gap exists
+    recommendation: str
+
+
+# Coverage categories - what types of protection exist
+COVERAGE_CATEGORIES = {
+    # Liability Protection
+    "auto_liability": CoverageCategory(
+        id="auto_liability",
+        name="Auto Liability",
+        description="Covers damage/injury you cause to others while driving",
+        importance="critical",
+        typical_sources=["auto"]
+    ),
+    "home_liability": CoverageCategory(
+        id="home_liability",
+        name="Home Liability",
+        description="Covers injury to others on your property or damage you cause",
+        importance="critical",
+        typical_sources=["home", "renters"]
+    ),
+    "umbrella_liability": CoverageCategory(
+        id="umbrella_liability",
+        name="Umbrella/Excess Liability",
+        description="Additional liability coverage above auto/home limits",
+        importance="important",
+        typical_sources=["umbrella", "liability"]
+    ),
+
+    # Property Protection
+    "dwelling_coverage": CoverageCategory(
+        id="dwelling_coverage",
+        name="Dwelling Coverage",
+        description="Covers repair/rebuild of your home structure",
+        importance="critical",
+        typical_sources=["home"]
+    ),
+    "personal_property": CoverageCategory(
+        id="personal_property",
+        name="Personal Property",
+        description="Covers your belongings (furniture, electronics, clothes)",
+        importance="important",
+        typical_sources=["home", "renters"]
+    ),
+    "auto_collision": CoverageCategory(
+        id="auto_collision",
+        name="Auto Collision",
+        description="Covers damage to your car from accidents",
+        importance="important",
+        typical_sources=["auto"]
+    ),
+    "auto_comprehensive": CoverageCategory(
+        id="auto_comprehensive",
+        name="Auto Comprehensive",
+        description="Covers non-collision damage (theft, weather, animals)",
+        importance="important",
+        typical_sources=["auto"]
+    ),
+
+    # Life & Income Protection
+    "life_insurance": CoverageCategory(
+        id="life_insurance",
+        name="Life Insurance",
+        description="Provides financial support to dependents if you pass away",
+        importance="critical",
+        typical_sources=["life"]
+    ),
+    "disability_income": CoverageCategory(
+        id="disability_income",
+        name="Disability Income",
+        description="Replaces income if you can't work due to illness/injury",
+        importance="important",
+        typical_sources=["disability"]
+    ),
+
+    # Medical
+    "medical_payments": CoverageCategory(
+        id="medical_payments",
+        name="Medical Payments",
+        description="Covers medical bills regardless of fault",
+        importance="recommended",
+        typical_sources=["auto", "home"]
+    ),
+    "uninsured_motorist": CoverageCategory(
+        id="uninsured_motorist",
+        name="Uninsured/Underinsured Motorist",
+        description="Covers you if hit by uninsured driver",
+        importance="important",
+        typical_sources=["auto"]
+    ),
+}
+
+
+# Gap detection rules - specific scenarios that indicate coverage gaps
+GAP_RULES: list[GapRule] = [
+    # High severity gaps
+    GapRule(
+        id="no_auto_with_vehicle",
+        name="No Auto Insurance",
+        description="You appear to have a vehicle but no auto insurance policy",
+        severity="high",
+        condition="has_vehicle AND NOT has_auto_policy",
+        recommendation="Auto liability insurance is legally required in most states. Add an auto policy immediately."
+    ),
+    GapRule(
+        id="no_home_as_owner",
+        name="No Homeowners Insurance",
+        description="You own a home but don't have homeowners insurance",
+        severity="high",
+        condition="is_homeowner AND NOT has_home_policy",
+        recommendation="Your home is likely your largest asset. Homeowners insurance protects against fire, theft, liability, and more."
+    ),
+    GapRule(
+        id="no_renters_as_renter",
+        name="No Renters Insurance",
+        description="You rent your home but don't have renters insurance",
+        severity="medium",
+        condition="is_renter AND NOT has_renters_policy",
+        recommendation="Renters insurance is inexpensive and covers your belongings plus liability. Highly recommended."
+    ),
+    GapRule(
+        id="no_life_with_dependents",
+        name="No Life Insurance with Dependents",
+        description="You have dependents but no life insurance",
+        severity="high",
+        condition="has_dependents AND NOT has_life_policy",
+        recommendation="Life insurance ensures your family is financially protected. Consider term life for affordable coverage."
+    ),
+
+    # Medium severity gaps
+    GapRule(
+        id="no_umbrella_high_assets",
+        name="No Umbrella Coverage",
+        description="Your assets exceed your liability coverage limits",
+        severity="medium",
+        condition="high_net_worth AND NOT has_umbrella_policy",
+        recommendation="An umbrella policy provides extra liability protection above your auto/home limits. Protects your savings and future earnings from lawsuits."
+    ),
+    GapRule(
+        id="low_liability_limits",
+        name="Low Liability Limits",
+        description="Your liability coverage may be insufficient for your assets",
+        severity="medium",
+        condition="auto_liability_under_100k OR home_liability_under_300k",
+        recommendation="Consider increasing liability limits. A serious accident could exceed your coverage and put your assets at risk."
+    ),
+    GapRule(
+        id="no_uninsured_motorist",
+        name="No Uninsured Motorist Coverage",
+        description="You're not protected if hit by an uninsured driver",
+        severity="medium",
+        condition="has_auto_policy AND NOT has_uninsured_motorist",
+        recommendation="About 13% of drivers are uninsured. UM/UIM coverage protects you and is usually inexpensive."
+    ),
+
+    # Low severity / recommendations
+    GapRule(
+        id="no_roadside",
+        name="No Roadside Assistance",
+        description="You don't have roadside assistance coverage",
+        severity="low",
+        condition="has_auto_policy AND NOT has_roadside",
+        recommendation="Roadside assistance covers towing, flat tires, lockouts. Often just a few dollars per month."
+    ),
+    GapRule(
+        id="high_deductible_low_savings",
+        name="High Deductible Risk",
+        description="Your deductible may be higher than your emergency fund",
+        severity="low",
+        condition="deductible_exceeds_emergency_fund",
+        recommendation="Ensure you can cover your deductible in an emergency. Consider lowering it if needed."
+    ),
+    GapRule(
+        id="renewal_approaching",
+        name="Policy Renewal Approaching",
+        description="A policy is expiring soon - time to review coverage",
+        severity="low",
+        condition="renewal_within_30_days",
+        recommendation="Review your coverage before renewal. Shop around or ask your agent about discounts."
+    ),
+]
+
+
+def get_policy_coverages(policy_type: str) -> list[str]:
+    """Get the coverage categories typically provided by a policy type."""
+    policy_type = (policy_type or "").lower()
+
+    coverage_map = {
+        "auto": ["auto_liability", "auto_collision", "auto_comprehensive", "medical_payments", "uninsured_motorist"],
+        "home": ["dwelling_coverage", "personal_property", "home_liability", "medical_payments"],
+        "renters": ["personal_property", "home_liability"],
+        "life": ["life_insurance"],
+        "umbrella": ["umbrella_liability"],
+        "liability": ["umbrella_liability"],
+        "disability": ["disability_income"],
+        "workers_comp": [],  # Business coverage
+    }
+
+    return coverage_map.get(policy_type, [])
+
+
+def analyze_coverage_gaps(
+    policies: list[dict],
+    user_context: Optional[dict] = None
+) -> list[dict]:
+    """
+    Analyze a user's policies and identify coverage gaps.
+
+    Args:
+        policies: List of policy dicts with type, coverage_amount, details, etc.
+        user_context: Optional dict with user info (has_dependents, is_homeowner, etc.)
+
+    Returns:
+        List of identified gaps with severity, description, and recommendations
+    """
+    user_context = user_context or {}
+    gaps = []
+
+    # Build a set of what coverage the user has
+    policy_types = set()
+    has_coverages = set()
+    total_liability = 0
+
+    for policy in policies:
+        ptype = (policy.get("policy_type") or "").lower()
+        policy_types.add(ptype)
+        has_coverages.update(get_policy_coverages(ptype))
+
+        # Track liability limits
+        if ptype == "auto":
+            total_liability += policy.get("coverage_amount") or 0
+
+        # Check for specific coverages in details
+        details = {d.get("field_name", "").lower(): d.get("field_value", "")
+                   for d in policy.get("details", [])}
+
+        if details.get("uninsured_motorist"):
+            has_coverages.add("uninsured_motorist")
+        if details.get("roadside_assistance"):
+            has_coverages.add("roadside")
+
+    # Check each gap rule
+    # No auto insurance
+    if "auto" not in policy_types:
+        # Only flag if they seem to have a vehicle (we'd know from context or assume)
+        gaps.append({
+            "id": "consider_auto",
+            "name": "Auto Insurance",
+            "severity": "info",
+            "description": "No auto policy on file. If you own or lease a vehicle, you need auto insurance.",
+            "recommendation": "Add your auto policy to track coverage and renewals.",
+            "category": "auto_liability"
+        })
+
+    # No home/renters
+    if "home" not in policy_types and "renters" not in policy_types:
+        gaps.append({
+            "id": "consider_property",
+            "name": "Property Insurance",
+            "severity": "info",
+            "description": "No home or renters policy on file.",
+            "recommendation": "Homeowners need dwelling coverage. Renters should have renters insurance to protect belongings.",
+            "category": "personal_property"
+        })
+
+    # No life insurance - especially important with dependents
+    if "life" not in policy_types:
+        severity = "high" if user_context.get("has_dependents") else "info"
+        gaps.append({
+            "id": "no_life",
+            "name": "Life Insurance",
+            "severity": severity,
+            "description": "No life insurance policy on file.",
+            "recommendation": "Life insurance provides financial security for your loved ones. Term life is an affordable option.",
+            "category": "life_insurance"
+        })
+
+    # No umbrella - important for asset protection
+    if "umbrella" not in policy_types and "liability" not in policy_types:
+        if len(policy_types) >= 2:  # They have multiple policies, may have assets to protect
+            gaps.append({
+                "id": "no_umbrella",
+                "name": "Umbrella Coverage",
+                "severity": "medium",
+                "description": "No umbrella/excess liability policy.",
+                "recommendation": "An umbrella policy provides additional liability coverage above your auto and home limits. Protects your assets from lawsuits.",
+                "category": "umbrella_liability"
+            })
+
+    # Low auto liability
+    if "auto" in policy_types:
+        auto_policies = [p for p in policies if (p.get("policy_type") or "").lower() == "auto"]
+        for ap in auto_policies:
+            coverage = ap.get("coverage_amount") or 0
+            if coverage > 0 and coverage < 100000:
+                gaps.append({
+                    "id": "low_auto_liability",
+                    "name": "Low Auto Liability Limit",
+                    "severity": "medium",
+                    "description": f"Your auto liability limit (${coverage:,}) may be insufficient.",
+                    "recommendation": "Consider increasing to at least $100,000/$300,000. Medical costs and lawsuits can easily exceed low limits.",
+                    "category": "auto_liability"
+                })
+                break
+
+    # Check for policies expiring soon
+    from datetime import datetime, timedelta
+    now = datetime.now().date()
+    for policy in policies:
+        renewal = policy.get("renewal_date")
+        if renewal:
+            try:
+                if isinstance(renewal, str):
+                    renewal_date = datetime.strptime(renewal, "%Y-%m-%d").date()
+                else:
+                    renewal_date = renewal
+
+                days_until = (renewal_date - now).days
+
+                if days_until < 0:
+                    gaps.append({
+                        "id": f"expired_{policy.get('id')}",
+                        "name": "Policy Expired",
+                        "severity": "high",
+                        "description": f"Your {policy.get('carrier', 'policy')} {policy.get('policy_type', '')} policy has expired.",
+                        "recommendation": "Renew immediately to avoid coverage lapses.",
+                        "category": "renewal",
+                        "policy_id": policy.get("id")
+                    })
+                elif days_until <= 14:
+                    gaps.append({
+                        "id": f"expiring_soon_{policy.get('id')}",
+                        "name": "Renewal Urgent",
+                        "severity": "medium",
+                        "description": f"Your {policy.get('carrier', 'policy')} {policy.get('policy_type', '')} policy expires in {days_until} days.",
+                        "recommendation": "Review coverage and renew before expiration.",
+                        "category": "renewal",
+                        "policy_id": policy.get("id")
+                    })
+                elif days_until <= 30:
+                    gaps.append({
+                        "id": f"expiring_{policy.get('id')}",
+                        "name": "Renewal Approaching",
+                        "severity": "low",
+                        "description": f"Your {policy.get('carrier', 'policy')} {policy.get('policy_type', '')} policy expires in {days_until} days.",
+                        "recommendation": "Good time to review coverage and shop around.",
+                        "category": "renewal",
+                        "policy_id": policy.get("id")
+                    })
+            except (ValueError, TypeError):
+                pass
+
+    # Sort by severity
+    severity_order = {"high": 0, "medium": 1, "low": 2, "info": 3}
+    gaps.sort(key=lambda g: severity_order.get(g["severity"], 4))
+
+    return gaps
+
+
+def get_coverage_summary(policies: list[dict]) -> dict:
+    """
+    Generate a summary of the user's overall coverage.
+
+    Returns:
+        Dict with coverage statistics and insights
+    """
+    policy_types = set()
+    total_coverage = 0
+    total_premium = 0
+    coverage_by_type = {}
+
+    for policy in policies:
+        ptype = (policy.get("policy_type") or "other").lower()
+        policy_types.add(ptype)
+
+        coverage = policy.get("coverage_amount") or 0
+        premium = policy.get("premium_amount") or 0
+
+        total_coverage += coverage
+        total_premium += premium
+
+        if ptype not in coverage_by_type:
+            coverage_by_type[ptype] = {"coverage": 0, "premium": 0, "count": 0}
+        coverage_by_type[ptype]["coverage"] += coverage
+        coverage_by_type[ptype]["premium"] += premium
+        coverage_by_type[ptype]["count"] += 1
+
+    # Determine what categories are covered
+    covered_categories = set()
+    for ptype in policy_types:
+        covered_categories.update(get_policy_coverages(ptype))
+
+    return {
+        "total_policies": len(policies),
+        "policy_types": list(policy_types),
+        "total_coverage": total_coverage,
+        "total_annual_premium": total_premium,
+        "coverage_by_type": coverage_by_type,
+        "covered_categories": list(covered_categories),
+        "missing_categories": [
+            cat_id for cat_id, cat in COVERAGE_CATEGORIES.items()
+            if cat_id not in covered_categories and cat.importance in ("critical", "important")
+        ]
+    }
