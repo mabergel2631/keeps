@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: '🏠' },
   { href: '/policies', label: 'Policies', icon: '📋' },
   { href: '/emergency', label: 'Emergency', icon: '🚨', urgent: true },
-  { href: '/audit', label: 'Audit Log', icon: '📜' },
+  { href: '/audit', label: 'Alerts', icon: '🔔' },
   { href: '/policies/compare', label: 'Compare', icon: '⚖️' },
   { href: '/privacy', label: 'Privacy', icon: '🔒' },
 ];
@@ -154,6 +154,44 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         {children}
       </div>
+
+      {/* Floating SOS Button */}
+      {pathname !== '/emergency' && (
+        <button
+          onClick={() => router.push('/emergency')}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            backgroundColor: '#dc2626',
+            color: '#fff',
+            border: 'none',
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(220, 38, 38, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 14px rgba(220, 38, 38, 0.4)';
+          }}
+          title="Emergency Access"
+        >
+          SOS
+        </button>
+      )}
     </div>
   );
 }

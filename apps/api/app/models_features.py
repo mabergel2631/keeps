@@ -99,3 +99,88 @@ class PremiumHistory(Base):
     source: Mapped[str] = mapped_column(String(20), default="manual")  # manual, extraction, renewal
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PolicyDelta(Base):
+    """Track changes between policy versions detected during extraction."""
+    __tablename__ = "policy_deltas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    policy_id: Mapped[int] = mapped_column(Integer, ForeignKey("policies.id", ondelete="CASCADE"), index=True)
+    document_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("documents.id", ondelete="SET NULL"), nullable=True)
+    field_key: Mapped[str] = mapped_column(String(100))  # "premium_amount", "coverage_amount", etc.
+    old_value: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    new_value: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    delta_type: Mapped[str] = mapped_column(String(20))  # "increased", "decreased", "added", "removed", "changed"
+    severity: Mapped[str] = mapped_column(String(20))  # "critical", "warning", "info"
+    is_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class DeltaExplanation(Base):
+    """AI-generated explanation for a policy change."""
+    __tablename__ = "delta_explanations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    delta_id: Mapped[int] = mapped_column(Integer, ForeignKey("policy_deltas.id", ondelete="CASCADE"), index=True)
+    explanation: Mapped[str] = mapped_column(Text)
+    possible_reasons: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array of reasons
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class CoverageScore(Base):
+    """User coverage score by category."""
+    __tablename__ = "coverage_scores"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    category: Mapped[str] = mapped_column(String(50))  # "auto", "home", "life", "umbrella", "overall"
+    score_total: Mapped[int] = mapped_column(Integer)  # 0-100
+    score_breakdown: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
+    insights: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
+    last_calculated: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class InboundAddress(Base):
+    """User's unique email address for receiving policy documents."""
+    __tablename__ = "inbound_addresses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), unique=True, index=True)
+    alias: Mapped[str] = mapped_column(String(50), unique=True, index=True)  # "u_5_a8f2k3"
+    domain: Mapped[str] = mapped_column(String(100), default="inbound.policyvault.com")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class InboundEmail(Base):
+    """Record of received inbound emails."""
+    __tablename__ = "inbound_emails"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    inbound_address_id: Mapped[int] = mapped_column(Integer, ForeignKey("inbound_addresses.id"), index=True)
+    from_email: Mapped[str] = mapped_column(String(255))
+    subject: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    raw_payload: Mapped[str | None] = mapped_column(Text, nullable=True)  # Full JSON
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "processing", "completed", "failed"
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PolicyDraft(Base):
+    """Policy draft created from email ingestion awaiting user approval."""
+    __tablename__ = "policy_drafts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    inbound_email_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("inbound_emails.id"), nullable=True)
+    matched_policy_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("policies.id", ondelete="SET NULL"), nullable=True)
+    carrier: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    policy_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    policy_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    extraction_data: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
+    original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    object_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "approved", "rejected"
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())

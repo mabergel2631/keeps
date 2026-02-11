@@ -15,6 +15,7 @@ from .models import Policy, Contact, CoverageItem, PolicyDetail, User
 from .models_documents import Document
 from .storage import presign_get_url
 from .audit_helper import log_action
+from .routes_deltas import detect_deltas
 
 router = APIRouter(prefix="/documents", tags=["extraction"])
 
@@ -153,6 +154,19 @@ def confirm_extraction(document_id: int, payload: ConfirmExtraction, db: Session
     if not policy or policy.user_id != user.id:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # Detect deltas BEFORE applying changes (compare new vs current)
+    new_data = {
+        "carrier": payload.carrier,
+        "policy_number": payload.policy_number,
+        "policy_type": payload.policy_type,
+        "scope": payload.scope,
+        "coverage_amount": payload.coverage_amount,
+        "deductible": payload.deductible,
+        "premium_amount": payload.premium_amount,
+        "renewal_date": payload.renewal_date,
+    }
+    deltas = detect_deltas(db, policy, new_data, document_id=doc.id)
+
     # Apply user-reviewed fields
     if payload.carrier:
         policy.carrier = payload.carrier
@@ -206,4 +220,4 @@ def confirm_extraction(document_id: int, payload: ConfirmExtraction, db: Session
     log_action(db, user.id, "confirmed", "extraction", doc.id)
     db.commit()
 
-    return {"ok": True}
+    return {"ok": True, "deltas_detected": len(deltas)}

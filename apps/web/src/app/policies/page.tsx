@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { policiesApi, renewalsApi, remindersApi, premiumsApi, sharingApi, documentsApi, gapsApi, Policy, PolicyCreate, RenewalItem, SmartAlert, SharedPolicy, PendingShare, CoverageGap, CoverageSummary } from '../../../lib/api';
+import { policiesApi, renewalsApi, remindersApi, premiumsApi, sharingApi, documentsApi, gapsApi, scoresApi, inboundApi, Policy, PolicyCreate, RenewalItem, SmartAlert, SharedPolicy, PendingShare, CoverageGap, CoverageSummary, CoverageScoresResult, InboundAddress, PolicyDraftData } from '../../../lib/api';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { APP_NAME } from '../config';
@@ -31,6 +31,12 @@ export default function PoliciesPage() {
   const [smartAlerts, setSmartAlerts] = useState<SmartAlert[]>([]);
   const [coverageGaps, setCoverageGaps] = useState<CoverageGap[]>([]);
   const [coverageSummary, setCoverageSummary] = useState<CoverageSummary | null>(null);
+  const [coverageScores, setCoverageScores] = useState<CoverageScoresResult | null>(null);
+  const [inboundAddress, setInboundAddress] = useState<InboundAddress | null>(null);
+  const [pendingDrafts, setPendingDrafts] = useState<PolicyDraftData[]>([]);
+  const [showDraftModal, setShowDraftModal] = useState<PolicyDraftData | null>(null);
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+  const [creatingAddress, setCreatingAddress] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -52,7 +58,7 @@ export default function PoliciesPage() {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [pols, rens, spend, shared, pending, alerts, gapsResult] = await Promise.all([
+      const [pols, rens, spend, shared, pending, alerts, gapsResult, scoresResult, addressResult, draftsResult] = await Promise.all([
         policiesApi.list(),
         renewalsApi.upcoming(90),
         premiumsApi.annualSpend(),
@@ -60,6 +66,9 @@ export default function PoliciesPage() {
         sharingApi.pending(),
         remindersApi.smart().catch(() => []),
         gapsApi.analyze().catch(() => ({ gaps: [], summary: null, policy_count: 0 })),
+        scoresApi.get().catch(() => null),
+        inboundApi.getAddress().catch(() => ({ address: null })),
+        inboundApi.listDrafts('pending').catch(() => ({ items: [], total: 0 })),
       ]);
       setPolicies(Array.isArray(pols) ? pols : []);
       setRenewals(Array.isArray(rens) ? rens : []);
@@ -69,6 +78,9 @@ export default function PoliciesPage() {
       setSmartAlerts(Array.isArray(alerts) ? alerts : []);
       setCoverageGaps(gapsResult.gaps || []);
       setCoverageSummary(gapsResult.summary || null);
+      setCoverageScores(scoresResult);
+      setInboundAddress(addressResult?.address || null);
+      setPendingDrafts(draftsResult?.items || []);
     } catch (err: any) {
       if (err.status === 401 || err.status === 403) { logout(); router.replace('/login'); return; }
       setError(err.message);
@@ -159,6 +171,49 @@ export default function PoliciesPage() {
       await sharingApi.accept(shareId);
       loadAll();
     } catch (err: any) { setError(err.message); }
+  };
+
+  const handleCreateInboundAddress = async () => {
+    setCreatingAddress(true);
+    try {
+      const result = await inboundApi.createAddress();
+      setInboundAddress(result);
+      toast('Email address created!', 'success');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setCreatingAddress(false);
+    }
+  };
+
+  const handleApproveDraft = async (draft: PolicyDraftData) => {
+    try {
+      const result = await inboundApi.approveDraft(draft.id, {
+        policy_type: draft.policy_type || 'other',
+        scope: 'personal',
+      });
+      toast(result.action === 'created' ? 'Policy created from draft!' : 'Policy updated!', 'success');
+      setShowDraftModal(null);
+      loadAll();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleRejectDraft = async (draftId: number) => {
+    try {
+      await inboundApi.rejectDraft(draftId);
+      toast('Draft discarded', 'success');
+      setShowDraftModal(null);
+      loadAll();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast('Copied to clipboard!', 'success');
   };
 
   // Computed values for insights
@@ -259,6 +314,29 @@ export default function PoliciesPage() {
 
         {error && <div className="alert alert-error" style={{ marginBottom: 24 }}>{error}</div>}
 
+        {/* Pending Drafts Alert */}
+        {pendingDrafts.length > 0 && (
+          <div style={{ padding: 20, marginBottom: 24, backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 12, color: '#166534' }}>
+              📧 {pendingDrafts.length} Policy Draft{pendingDrafts.length > 1 ? 's' : ''} Pending Review
+            </div>
+            {pendingDrafts.slice(0, 3).map(draft => (
+              <div key={draft.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                  {draft.carrier || 'Unknown Carrier'} - {draft.policy_type || 'Unknown Type'}
+                  {draft.original_filename && <span style={{ marginLeft: 8, opacity: 0.7 }}>({draft.original_filename})</span>}
+                </span>
+                <button onClick={() => setShowDraftModal(draft)} className="btn btn-sm" style={{ padding: '6px 16px', fontSize: 13, backgroundColor: '#22c55e', color: '#fff', border: 'none' }}>Review</button>
+              </div>
+            ))}
+            {pendingDrafts.length > 3 && (
+              <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 8 }}>
+                +{pendingDrafts.length - 3} more
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Pending Shares Alert */}
         {pendingShares.length > 0 && (
           <div style={{ padding: 20, marginBottom: 24, backgroundColor: 'var(--color-info-bg)', border: '1px solid var(--color-info)', borderRadius: 'var(--radius-md)' }}>
@@ -270,6 +348,81 @@ export default function PoliciesPage() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Coverage Score Card */}
+        {!loading && coverageScores && coverageScores.overall.score > 0 && (
+          <section style={{ marginBottom: 40 }}>
+            <div style={{
+              padding: 24,
+              backgroundColor: '#fff',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px' }}>
+                    Protection Score
+                  </h2>
+                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
+                    How well protected are you?
+                  </p>
+                </div>
+                <div style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  backgroundColor: coverageScores.overall.score >= 70 ? '#dcfce7' : coverageScores.overall.score >= 40 ? '#fef3c7' : '#fee2e2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                }}>
+                  <span style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: coverageScores.overall.score >= 70 ? '#166534' : coverageScores.overall.score >= 40 ? '#92400e' : '#991b1b',
+                  }}>
+                    {coverageScores.overall.score}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>/ 100</span>
+                </div>
+              </div>
+
+              {/* Category bars */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {Object.entries(coverageScores.categories).filter(([_, data]) => data.score > 0).map(([cat, data]) => (
+                  <div key={cat}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{cat}</span>
+                      <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{data.score}%</span>
+                    </div>
+                    <div style={{ height: 8, backgroundColor: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${data.score}%`,
+                        height: '100%',
+                        backgroundColor: data.score >= 70 ? '#22c55e' : data.score >= 40 ? '#f59e0b' : '#ef4444',
+                        borderRadius: 4,
+                        transition: 'width 0.3s',
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Insights */}
+              {coverageScores.overall.insights.length > 0 && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8 }}>Suggestions</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    {coverageScores.overall.insights.slice(0, 3).map((insight, i) => (
+                      <li key={i} style={{ marginBottom: 4 }}>{insight}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
@@ -425,8 +578,85 @@ export default function PoliciesPage() {
                 Compare Coverage
               </button>
             )}
+            <button
+              onClick={() => setShowEmailSettings(!showEmailSettings)}
+              className="btn btn-outline"
+              style={{ padding: '14px 28px', fontSize: 15 }}
+            >
+              📧 Email Import
+            </button>
           </div>
         </section>
+
+        {/* Email Settings Section */}
+        {showEmailSettings && (
+          <section style={{ marginBottom: 40 }}>
+            <div style={{
+              padding: 24,
+              backgroundColor: '#fff',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+            }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Add Policies by Email</h2>
+              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: '0 0 20px' }}>
+                Forward policy documents to your unique email address and we&apos;ll extract the details automatically.
+              </p>
+
+              {!inboundAddress ? (
+                <button
+                  onClick={handleCreateInboundAddress}
+                  disabled={creatingAddress}
+                  className="btn btn-primary"
+                  style={{ padding: '12px 24px', fontSize: 14 }}
+                >
+                  {creatingAddress ? 'Creating...' : 'Generate Email Address'}
+                </button>
+              ) : (
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: 16,
+                    backgroundColor: '#f9fafb',
+                    borderRadius: 8,
+                    marginBottom: 16,
+                  }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={inboundAddress.email}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 6,
+                        backgroundColor: '#fff',
+                      }}
+                    />
+                    <button
+                      onClick={() => copyToClipboard(inboundAddress.email)}
+                      className="btn btn-primary"
+                      style={{ padding: '10px 20px', fontSize: 14 }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                    <strong>How it works:</strong>
+                    <ol style={{ margin: '8px 0 0', paddingLeft: 20 }}>
+                      <li>Forward or send policy PDFs to this address</li>
+                      <li>We&apos;ll extract the policy details automatically</li>
+                      <li>Review and approve drafts to add them to your account</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════
             4️⃣ DETAIL - Policy list (comes last)
@@ -725,6 +955,97 @@ export default function PoliciesPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          DRAFT REVIEW MODAL
+      ═══════════════════════════════════════════════════════════════ */}
+      {showDraftModal && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24
+        }}>
+          <div style={{
+            backgroundColor: '#fff', borderRadius: 'var(--radius-lg)', padding: 32, maxWidth: 550, width: '100%', maxHeight: '90vh', overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Review Policy Draft</h2>
+              <button onClick={() => setShowDraftModal(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--color-text-muted)' }}>×</button>
+            </div>
+
+            {/* Source info */}
+            {showDraftModal.original_filename && (
+              <div style={{ padding: 12, backgroundColor: '#f9fafb', borderRadius: 8, marginBottom: 20, fontSize: 13, color: 'var(--color-text-muted)' }}>
+                📄 Source: {showDraftModal.original_filename}
+              </div>
+            )}
+
+            {/* Match indicator */}
+            {showDraftModal.matched_policy_id && (
+              <div style={{ padding: 12, backgroundColor: '#fef3c7', borderRadius: 8, marginBottom: 20, fontSize: 13, color: '#92400e' }}>
+                ⚠️ This appears to match an existing policy. Approving will update that policy.
+              </div>
+            )}
+
+            {/* Extracted data */}
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 12 }}>Extracted Information</h3>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Carrier</span>
+                  <span style={{ fontWeight: 500, fontSize: 14 }}>{showDraftModal.carrier || 'Unknown'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Policy Number</span>
+                  <span style={{ fontWeight: 500, fontSize: 14, fontFamily: 'monospace' }}>{showDraftModal.policy_number || 'TBD'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Policy Type</span>
+                  <span style={{ fontWeight: 500, fontSize: 14, textTransform: 'capitalize' }}>{showDraftModal.policy_type || 'other'}</span>
+                </div>
+                {showDraftModal.extraction_data && (
+                  <>
+                    {(showDraftModal.extraction_data as any).coverage_amount && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Coverage</span>
+                        <span style={{ fontWeight: 500, fontSize: 14 }}>${((showDraftModal.extraction_data as any).coverage_amount).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {(showDraftModal.extraction_data as any).deductible && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Deductible</span>
+                        <span style={{ fontWeight: 500, fontSize: 14 }}>${((showDraftModal.extraction_data as any).deductible).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {(showDraftModal.extraction_data as any).premium_amount && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Premium</span>
+                        <span style={{ fontWeight: 500, fontSize: 14 }}>${((showDraftModal.extraction_data as any).premium_amount).toLocaleString()}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => handleApproveDraft(showDraftModal)}
+                className="btn btn-accent"
+                style={{ flex: 1, padding: '14px 24px', fontSize: 15, fontWeight: 600 }}
+              >
+                {showDraftModal.matched_policy_id ? 'Update Existing Policy' : 'Create Policy'}
+              </button>
+              <button
+                onClick={() => handleRejectDraft(showDraftModal.id)}
+                className="btn btn-outline"
+                style={{ padding: '14px 24px', fontSize: 15, color: '#dc2626', borderColor: '#dc2626' }}
+              >
+                Discard
+              </button>
+            </div>
           </div>
         </div>
       )}

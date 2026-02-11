@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { iceApi, EmergencyCardPublic } from '../../../../lib/api';
 import { APP_NAME } from '../../config';
+import { cacheEmergencyData, getCachedEmergencyData, formatCacheTimestamp } from '../../../../lib/offlineCache';
 
 const POLICY_TYPE_CONFIG: Record<string, { icon: string; label: string }> = {
   auto: { icon: '🚗', label: 'Auto' },
@@ -28,11 +29,33 @@ export default function EmergencyCardPage() {
   const [cardData, setCardData] = useState<EmergencyCardPublic | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // Offline state
+  const [isOnline, setIsOnline] = useState(true);
+  const [isUsingCache, setIsUsingCache] = useState(false);
+  const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(null);
+
+  // Track online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     loadCard();
   }, [accessCode]);
 
   const loadCard = async () => {
+    const cacheKey = `ice_card_${accessCode}`;
     try {
       setLoading(true);
       setError('');
@@ -42,9 +65,25 @@ export default function EmergencyCardPage() {
         setHolderName(data.holder_name);
       } else {
         setCardData(data);
+        setIsUsingCache(false);
+        // Cache the data for offline use
+        await cacheEmergencyData(cacheKey, data);
       }
     } catch (err: any) {
-      setError(err.message || 'Emergency card not found');
+      // Try to load from cache if offline
+      try {
+        const cached = await getCachedEmergencyData<EmergencyCardPublic>(cacheKey);
+        if (cached && !cached.data.requires_pin) {
+          setCardData(cached.data);
+          setCacheTimestamp(cached.timestamp);
+          setIsUsingCache(true);
+          setError('');
+        } else {
+          setError(err.message || 'Emergency card not found');
+        }
+      } catch {
+        setError(err.message || 'Emergency card not found');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,12 +91,16 @@ export default function EmergencyCardPage() {
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cacheKey = `ice_card_${accessCode}`;
     try {
       setLoading(true);
       setError('');
       const data = await iceApi.verifyPin(accessCode, pin);
       setCardData(data);
       setRequiresPin(false);
+      setIsUsingCache(false);
+      // Cache the verified data
+      await cacheEmergencyData(cacheKey, data);
     } catch (err: any) {
       setError(err.message || 'Incorrect PIN');
     } finally {
@@ -164,6 +207,32 @@ export default function EmergencyCardPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f3f4f6', padding: '24px 16px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        {/* Offline Banner */}
+        {(!isOnline || isUsingCache) && (
+          <div style={{
+            padding: '12px 16px',
+            marginBottom: 12,
+            backgroundColor: !isOnline ? '#fef3c7' : '#e0f2fe',
+            border: `1px solid ${!isOnline ? '#fcd34d' : '#7dd3fc'}`,
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <span style={{ fontSize: 20 }}>{!isOnline ? '📡' : '💾'}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: !isOnline ? '#92400e' : '#0369a1' }}>
+                {!isOnline ? 'You are offline' : 'Viewing cached data'}
+              </div>
+              {cacheTimestamp && (
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  Last updated: {formatCacheTimestamp(cacheTimestamp)}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',

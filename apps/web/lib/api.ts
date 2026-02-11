@@ -723,6 +723,9 @@ export const iceApi = {
       body: JSON.stringify({ pin }),
     });
   },
+  getOfflineBundle(accessCode: string): Promise<EmergencyCardPublic & { cache_timestamp: string; can_cache: boolean }> {
+    return request<EmergencyCardPublic & { cache_timestamp: string; can_cache: boolean }>(`/ice/${accessCode}/offline-bundle`);
+  },
 };
 
 // ── Premium History API ─────────────────────────────────
@@ -763,5 +766,138 @@ export const premiumHistoryApi = {
   },
   remove(policyId: number, entryId: number): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/policies/${policyId}/premium-history/${entryId}`, { method: "DELETE" });
+  },
+};
+
+// ── Delta Alerts API ─────────────────────────────────────
+
+export type PolicyDelta = {
+  id: number;
+  policy_id: number;
+  document_id?: number | null;
+  field_key: string;
+  old_value?: string | null;
+  new_value?: string | null;
+  delta_type: string;
+  severity: string;
+  is_acknowledged: boolean;
+  created_at: string;
+  policy_carrier?: string | null;
+  policy_type?: string | null;
+  explanation?: string | null;
+};
+
+export type DeltaListResponse = {
+  items: PolicyDelta[];
+  total: number;
+  unacknowledged_count: number;
+};
+
+export type DeltaExplanation = {
+  explanation: string;
+  possible_reasons: string[];
+};
+
+export const deltasApi = {
+  list(params?: { acknowledged?: boolean; severity?: string; page?: number; limit?: number }): Promise<DeltaListResponse> {
+    const query = new URLSearchParams();
+    if (params?.acknowledged !== undefined) query.set("acknowledged", String(params.acknowledged));
+    if (params?.severity) query.set("severity", params.severity);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qs = query.toString();
+    return request<DeltaListResponse>(`/deltas${qs ? `?${qs}` : ""}`);
+  },
+  listForPolicy(policyId: number): Promise<{ items: PolicyDelta[]; total: number }> {
+    return request<{ items: PolicyDelta[]; total: number }>(`/policies/${policyId}/deltas`);
+  },
+  acknowledge(deltaId: number): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/deltas/${deltaId}/acknowledge`, { method: "PUT" });
+  },
+  acknowledgeAll(): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/deltas/acknowledge-all`, { method: "PUT" });
+  },
+  explain(deltaId: number): Promise<DeltaExplanation> {
+    return request<DeltaExplanation>(`/deltas/${deltaId}/explain`, { method: "POST" });
+  },
+};
+
+// ── Coverage Score API ─────────────────────────────────────
+
+export type CategoryScore = {
+  score: number;
+  breakdown: Record<string, number>;
+  insights: string[];
+};
+
+export type CoverageScoresResult = {
+  overall: CategoryScore;
+  categories: Record<string, CategoryScore>;
+  policy_count: number;
+};
+
+export const scoresApi = {
+  get(): Promise<CoverageScoresResult> {
+    return request<CoverageScoresResult>("/coverage-scores");
+  },
+  recalculate(): Promise<CoverageScoresResult> {
+    return request<CoverageScoresResult>("/coverage-scores/recalculate", { method: "POST" });
+  },
+};
+
+// ── Email Ingestion API ─────────────────────────────────────
+
+export type InboundAddress = {
+  id: number;
+  email: string;
+  alias: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type PolicyDraftData = {
+  id: number;
+  carrier?: string | null;
+  policy_number?: string | null;
+  policy_type?: string | null;
+  matched_policy_id?: number | null;
+  original_filename?: string | null;
+  extraction_data?: Record<string, unknown>;
+  status: string;
+  created_at: string;
+};
+
+export const inboundApi = {
+  getAddress(): Promise<{ address: InboundAddress | null }> {
+    return request<{ address: InboundAddress | null }>("/inbound/address");
+  },
+  createAddress(): Promise<InboundAddress> {
+    return request<InboundAddress>("/inbound/address", { method: "POST" });
+  },
+  updateAddress(isActive: boolean): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/inbound/address?is_active=${isActive}`, { method: "PUT" });
+  },
+  deleteAddress(): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>("/inbound/address", { method: "DELETE" });
+  },
+  listDrafts(status?: string): Promise<{ items: PolicyDraftData[]; total: number }> {
+    const qs = status ? `?status=${status}` : "";
+    return request<{ items: PolicyDraftData[]; total: number }>(`/inbound/drafts${qs}`);
+  },
+  getDraft(draftId: number): Promise<PolicyDraftData> {
+    return request<PolicyDraftData>(`/inbound/drafts/${draftId}`);
+  },
+  approveDraft(draftId: number, payload?: { policy_type?: string; scope?: string }): Promise<{ ok: boolean; policy_id: number; action: string }> {
+    return request<{ ok: boolean; policy_id: number; action: string }>(`/inbound/drafts/${draftId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {}),
+    });
+  },
+  rejectDraft(draftId: number): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/inbound/drafts/${draftId}/reject`, { method: "POST" });
+  },
+  countPending(): Promise<{ count: number }> {
+    return request<{ count: number }>("/inbound/drafts/count");
   },
 };

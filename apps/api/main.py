@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from app.db import engine, Base
 from app.models import User, Policy, Contact, CoverageItem, PolicyDetail  # noqa: F401 — register models
 from app.models_documents import Document  # noqa: F401
-from app.models_features import Premium, Claim, RenewalReminder, AuditLog, PolicyShare, EmergencyCard, PremiumHistory  # noqa: F401
+from app.models_features import Premium, Claim, RenewalReminder, AuditLog, PolicyShare, EmergencyCard, PremiumHistory, PolicyDelta, DeltaExplanation, CoverageScore, InboundAddress, InboundEmail, PolicyDraft  # noqa: F401
 
 from app.routes_auth import router as auth_router
 from app.routes_policies import router as policies_router
@@ -29,6 +29,9 @@ from app.routes_files import router as files_router
 from app.routes_gaps import router as gaps_router
 from app.routes_ice import router as ice_router
 from app.routes_premium_history import router as premium_history_router
+from app.routes_deltas import router as deltas_router
+from app.routes_scores import router as scores_router
+from app.routes_inbound import router as inbound_router
 
 app = FastAPI(title="Keeps API")
 
@@ -104,3 +107,6 @@ app.include_router(reminders_router)
 app.include_router(gaps_router)
 app.include_router(ice_router)
 app.include_router(premium_history_router)
+app.include_router(deltas_router)
+app.include_router(scores_router)
+app.include_router(inbound_router)

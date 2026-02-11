@@ -309,3 +309,39 @@ def _build_emergency_card_data(card: EmergencyCard, db: Session) -> dict:
         "policies": policy_data,
         "last_updated": str(card.updated_at),
     }
+
+
+@router.get("/ice/{access_code}/offline-bundle")
+def get_offline_bundle(access_code: str, db: Session = Depends(get_db)):
+    """
+    Get emergency card data with cache metadata for offline use.
+    Returns the full card data plus cache-control headers.
+    """
+    card = db.execute(
+        select(EmergencyCard).where(EmergencyCard.access_code == access_code)
+    ).scalar_one_or_none()
+
+    if not card:
+        raise HTTPException(status_code=404, detail="Emergency card not found")
+
+    if not card.is_active:
+        raise HTTPException(status_code=403, detail="This emergency card has been deactivated")
+
+    if card.expires_at and card.expires_at < date.today():
+        raise HTTPException(status_code=403, detail="This emergency card has expired")
+
+    # If PIN protected, don't return full data
+    if card.pin_hash:
+        return {
+            "requires_pin": True,
+            "holder_name": card.holder_name,
+            "cache_timestamp": str(card.updated_at),
+            "can_cache": False,
+        }
+
+    data = _build_emergency_card_data(card, db)
+    return {
+        **data,
+        "cache_timestamp": str(card.updated_at),
+        "can_cache": True,
+    }

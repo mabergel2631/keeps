@@ -6,6 +6,7 @@ import { useAuth } from '../../../lib/auth';
 import { policiesApi, contactsApi, documentsApi, policyDetailsApi, iceApi, Policy, Contact, DocMeta, PolicyDetail, EmergencyCardData } from '../../../lib/api';
 import { PolicyListSkeleton } from '../components/Skeleton';
 import { APP_NAME } from '../config';
+import { cacheEmergencyData, getCachedEmergencyData, formatCacheTimestamp } from '../../../lib/offlineCache';
 
 // Emergency Playbook - step-by-step instructions by policy type
 const EMERGENCY_PLAYBOOK: Record<string, { title: string; steps: string[]; tip?: string }> = {
@@ -121,6 +122,11 @@ export default function EmergencyPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Offline state
+  const [isOnline, setIsOnline] = useState(true);
+  const [isUsingCache, setIsUsingCache] = useState(false);
+  const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(null);
+
   // ICE Card state
   const [iceCard, setIceCard] = useState<EmergencyCardData | null>(null);
   const [showIceSetup, setShowIceSetup] = useState(false);
@@ -133,6 +139,22 @@ export default function EmergencyPage() {
     include_deductibles: true,
   });
   const [iceSaving, setIceSaving] = useState(false);
+
+  // Track online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    setIsOnline(navigator.onLine);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (!token) { router.replace('/login'); return; }
@@ -160,8 +182,31 @@ export default function EmergencyPage() {
       );
       setData(all);
       if (all.length > 0) setExpandedId(all[0].policy.id);
+      setIsUsingCache(false);
+
+      // Cache data for offline use
+      await cacheEmergencyData('emergency_policies', all);
+      await cacheEmergencyData('emergency_ice', iceResult.card);
     } catch (err: any) {
-      if (err.status === 401) { logout(); router.replace('/login'); }
+      if (err.status === 401) { logout(); router.replace('/login'); return; }
+
+      // Try to load from cache if offline or error
+      try {
+        const cachedPolicies = await getCachedEmergencyData<PolicyEmergencyData[]>('emergency_policies');
+        const cachedIce = await getCachedEmergencyData<EmergencyCardData | null>('emergency_ice');
+
+        if (cachedPolicies) {
+          setData(cachedPolicies.data);
+          setCacheTimestamp(cachedPolicies.timestamp);
+          setIsUsingCache(true);
+          if (cachedPolicies.data.length > 0) setExpandedId(cachedPolicies.data[0].policy.id);
+        }
+        if (cachedIce) {
+          setIceCard(cachedIce.data);
+        }
+      } catch (cacheErr) {
+        console.error('Failed to load cached data:', cacheErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -257,6 +302,49 @@ export default function EmergencyPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+      {/* Offline Banner */}
+      {(!isOnline || isUsingCache) && (
+        <div style={{
+          padding: '12px 16px',
+          marginBottom: 16,
+          backgroundColor: !isOnline ? '#fef3c7' : '#e0f2fe',
+          border: `1px solid ${!isOnline ? '#fcd34d' : '#7dd3fc'}`,
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <span style={{ fontSize: 20 }}>{!isOnline ? '📡' : '💾'}</span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: !isOnline ? '#92400e' : '#0369a1' }}>
+              {!isOnline ? 'You are offline' : 'Viewing cached data'}
+            </div>
+            {cacheTimestamp && (
+              <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                Last updated: {formatCacheTimestamp(cacheTimestamp)}
+              </div>
+            )}
+          </div>
+          {isOnline && isUsingCache && (
+            <button
+              onClick={loadAll}
+              style={{
+                marginLeft: 'auto',
+                padding: '6px 12px',
+                fontSize: 12,
+                border: '1px solid #0369a1',
+                borderRadius: 4,
+                backgroundColor: '#fff',
+                color: '#0369a1',
+                cursor: 'pointer',
+              }}
+            >
+              Refresh
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Emergency Header */}
       <div style={{
         background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
