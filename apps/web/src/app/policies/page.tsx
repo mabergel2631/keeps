@@ -735,7 +735,7 @@ export default function PoliciesPage() {
               className="btn btn-accent"
               style={{ padding: '14px 28px', fontSize: 15, fontWeight: 600 }}
             >
-              + Add Coverage
+              + Add Policy
             </button>
             <button
               onClick={() => router.push('/emergency')}
@@ -891,7 +891,7 @@ export default function PoliciesPage() {
             backgroundColor: '#fff', borderRadius: 'var(--radius-lg)', padding: 32, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Add Coverage</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Add Policy</h2>
               <button onClick={() => { setShowAddModal(false); resetWizard(); }} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--color-text-muted)' }}>×</button>
             </div>
 
