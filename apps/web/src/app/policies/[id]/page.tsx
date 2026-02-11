@@ -371,7 +371,7 @@ export default function PolicyDetailPage() {
     <div style={{ maxWidth: 960, margin: '0 auto', padding: 24 }}>
       {/* Breadcrumb */}
       <nav style={{ marginBottom: 16, fontSize: 13, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button onClick={() => router.push('/policies')} className="btn btn-ghost" style={{ padding: 0, fontSize: 13, color: 'var(--color-accent)' }}>Coverage</button>
+        <button onClick={() => router.push('/policies')} className="btn btn-ghost" style={{ padding: 0, fontSize: 13, color: 'var(--color-accent)' }}>Policies</button>
         <span>/</span>
         <span style={{ color: 'var(--color-text)' }}>{policy.nickname || policy.carrier}</span>
       </nav>
