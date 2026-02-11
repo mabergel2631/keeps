@@ -1,7 +1,10 @@
 import uuid
+import urllib.request
+import urllib.error
 from pathlib import Path
 from fastapi import APIRouter, Request, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .auth import get_current_user
@@ -68,6 +71,68 @@ async def direct_upload(
     db.add(doc)
     db.flush()
     log_action(db, user.id, "uploaded", "document", doc.id)
+    db.commit()
+    db.refresh(doc)
+    return {"ok": True, "document_id": doc.id}
+
+
+class ImportUrlRequest(BaseModel):
+    policy_id: int
+    url: str
+    doc_type: str = "policy"
+
+
+@router.post("/import-url")
+def import_from_url(
+    payload: ImportUrlRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    p = db.get(Policy, payload.policy_id)
+    if not p or p.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    # Validate URL
+    url = payload.url.strip()
+    if not url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+
+    # Download the file
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "PolicyVault/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            content_type = resp.headers.get("Content-Type", "")
+            data = resp.read(20 * 1024 * 1024)  # 20MB limit
+    except urllib.error.URLError as e:
+        raise HTTPException(status_code=400, detail=f"Could not download file: {e.reason}")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not download file from the provided URL")
+
+    # Validate it looks like a PDF
+    if not data[:5] == b"%PDF-" and "pdf" not in content_type.lower():
+        raise HTTPException(status_code=400, detail="The URL does not point to a PDF file")
+
+    # Extract filename from URL
+    filename = url.split("/")[-1].split("?")[0] or "document.pdf"
+    if not filename.lower().endswith(".pdf"):
+        filename += ".pdf"
+
+    # Store the file
+    object_key = f"policies/{p.scope}/{payload.policy_id}/{uuid.uuid4()}-{filename}"
+    dest = UPLOAD_DIR / object_key
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+
+    doc = Document(
+        policy_id=payload.policy_id,
+        filename=filename,
+        content_type="application/pdf",
+        object_key=object_key,
+        doc_type=payload.doc_type,
+    )
+    db.add(doc)
+    db.flush()
+    log_action(db, user.id, "imported_url", "document", doc.id)
     db.commit()
     db.refresh(doc)
     return {"ok": True, "document_id": doc.id}

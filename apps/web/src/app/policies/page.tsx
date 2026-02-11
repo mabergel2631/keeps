@@ -44,9 +44,11 @@ export default function PoliciesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const createFileRef = useRef<HTMLInputElement>(null);
   const [wizardStep, setWizardStep] = useState(0);
-  const [wizardMethod, setWizardMethod] = useState<'upload' | 'email' | ''>('');
+  const [wizardMethod, setWizardMethod] = useState<'upload' | 'url' | 'email' | ''>('');
   const [wizardData, setWizardData] = useState<{ scope: string; policy_type: string; business_name: string }>({ scope: '', policy_type: '', business_name: '' });
   const [existingBusinessNames, setExistingBusinessNames] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState('');
+  const [importingUrl, setImportingUrl] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -152,6 +154,44 @@ export default function PoliciesPage() {
     }
   };
 
+  const handleUrlImport = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    setImportingUrl(true);
+    setError('');
+    try {
+      const newPolicy = await policiesApi.create({
+        scope: (wizardData.scope || 'personal') as any,
+        policy_type: wizardData.policy_type || 'other',
+        carrier: 'Pending extraction...',
+        policy_number: 'TBD',
+        nickname: null, coverage_amount: null, deductible: null, renewal_date: null,
+        business_name: wizardData.scope === 'business' ? (wizardData.business_name || null) : null,
+      });
+
+      const importResult = await documentsApi.importFromUrl(newPolicy.id, url);
+
+      setExtracting(true);
+      try {
+        const extractResult = await documentsApi.extract(importResult.document_id);
+        sessionStorage.setItem(`pv_extract_${newPolicy.id}`, JSON.stringify({
+          docId: extractResult.document_id,
+          data: extractResult.extraction,
+        }));
+      } catch {}
+
+      setExtracting(false);
+      setImportingUrl(false);
+      setShowAddModal(false);
+      resetWizard();
+      router.push(`/policies/${newPolicy.id}`);
+    } catch (err: any) {
+      setError(err.message || 'Failed to import from URL');
+      setImportingUrl(false);
+      setExtracting(false);
+    }
+  };
+
   const resetWizard = () => {
     setWizardStep(0);
     setWizardMethod('');
@@ -159,6 +199,8 @@ export default function PoliciesPage() {
     setUploading(false);
     setUploadProgress(null);
     setExtracting(false);
+    setUrlInput('');
+    setImportingUrl(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -829,53 +871,35 @@ export default function PoliciesPage() {
                     <span style={{ fontSize: 12, color: 'var(--color-text-muted)', textAlign: 'center' }}>Upload a document and auto-extract details</span>
                   </button>
                   <button
-                    onClick={() => { setWizardMethod('email'); setWizardStep(-1); }}
+                    onClick={() => { setWizardMethod('url'); setWizardStep(1); }}
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 24,
                       border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', cursor: 'pointer',
                     }}
                   >
-                    <span style={{ fontSize: 32 }}>📧</span>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>Email Import</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)', textAlign: 'center' }}>Forward policy docs to your unique address</span>
+                    <span style={{ fontSize: 32 }}>🔗</span>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>Import from URL</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)', textAlign: 'center' }}>Paste a link to a PDF document</span>
                   </button>
                 </div>
-              </div>
-            )}
-
-            {/* Email Import Path */}
-            {wizardStep === -1 && (
-              <div>
-                <button onClick={() => { setWizardStep(0); setWizardMethod(''); }} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 600, color: 'var(--color-text)' }}>Add Policies by Email</h3>
-                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: '0 0 20px' }}>
-                  Forward policy documents to your unique email address and we&apos;ll extract the details automatically.
-                </p>
-                {!inboundAddress ? (
-                  <button
-                    onClick={handleCreateInboundAddress}
-                    disabled={creatingAddress}
-                    className="btn btn-primary"
-                    style={{ padding: '12px 24px', fontSize: 14 }}
-                  >
-                    {creatingAddress ? 'Creating...' : 'Generate Email Address'}
-                  </button>
-                ) : (
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, backgroundColor: '#f9fafb', borderRadius: 8, marginBottom: 16 }}>
-                      <input type="text" readOnly value={inboundAddress.email} style={{ flex: 1, padding: '10px 14px', fontSize: 14, fontFamily: 'monospace', border: '1px solid var(--color-border)', borderRadius: 6, backgroundColor: '#fff' }} />
-                      <button onClick={() => copyToClipboard(inboundAddress.email)} className="btn btn-primary" style={{ padding: '10px 20px', fontSize: 14 }}>Copy</button>
-                    </div>
-                    <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-                      <strong>How it works:</strong>
-                      <ol style={{ margin: '8px 0 0', paddingLeft: 20 }}>
-                        <li>Forward or send policy PDFs to this address</li>
-                        <li>We&apos;ll extract the policy details automatically</li>
-                        <li>Review and approve drafts to add them to your account</li>
-                      </ol>
-                    </div>
+                {/* Email Import - Coming Soon */}
+                <div
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', marginTop: 12,
+                    border: '1px dashed var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f9fafb',
+                    opacity: 0.6, cursor: 'default',
+                  }}
+                >
+                  <span style={{ fontSize: 24 }}>📧</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text)' }}>Email Import</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginLeft: 8 }}>Forward policy docs to your unique address</span>
                   </div>
-                )}
+                  <span style={{
+                    padding: '3px 10px', backgroundColor: '#e0e7ff', color: '#4338ca', borderRadius: 12,
+                    fontSize: 11, fontWeight: 600,
+                  }}>Coming Soon</span>
+                </div>
               </div>
             )}
 
@@ -952,7 +976,7 @@ export default function PoliciesPage() {
                   {Object.entries(POLICY_TYPE_CONFIG).map(([key, cfg]) => (
                     <button
                       key={key}
-                      onClick={() => { setWizardData(d => ({ ...d, policy_type: key })); setWizardStep(3); }}
+                      onClick={() => { setWizardData(d => ({ ...d, policy_type: key })); setWizardStep(wizardMethod === 'url' ? 4 : 3); }}
                       style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 16,
                         border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', cursor: 'pointer'
@@ -1000,6 +1024,60 @@ export default function PoliciesPage() {
                           backgroundColor: 'var(--color-accent)',
                           borderRadius: 3,
                           transition: 'width 0.2s',
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: URL Import */}
+            {wizardStep === 4 && (
+              <div>
+                <button onClick={() => setWizardStep(2)} disabled={importingUrl || extracting} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🔗</div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: 'var(--color-text)' }}>Import from URL</h3>
+                  <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                    Paste a link to a PDF and we&apos;ll download and extract the details.
+                  </p>
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={e => setUrlInput(e.target.value)}
+                    placeholder="https://example.com/policy.pdf"
+                    disabled={importingUrl || extracting}
+                    style={{
+                      width: '100%', padding: '12px 16px', fontSize: 15,
+                      border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                      marginBottom: 16, boxSizing: 'border-box',
+                    }}
+                    autoFocus
+                  />
+                  <div>
+                    <button
+                      onClick={handleUrlImport}
+                      disabled={!urlInput.trim() || importingUrl || extracting}
+                      className="btn btn-accent"
+                      style={{ padding: '14px 32px', fontSize: 15, fontWeight: 600 }}
+                    >
+                      {extracting ? 'Extracting...' : importingUrl ? 'Importing...' : 'Import & Extract'}
+                    </button>
+                  </div>
+
+                  {(importingUrl || extracting) && (
+                    <div style={{ marginTop: 20 }}>
+                      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+                        {extracting ? 'Reading your policy...' : 'Downloading PDF...'}
+                      </div>
+                      <div style={{ height: 6, backgroundColor: 'var(--color-border)', borderRadius: 3 }}>
+                        <div style={{
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: 'var(--color-accent)',
+                          borderRadius: 3,
+                          animation: 'pulse 1.5s ease-in-out infinite',
                         }} />
                       </div>
                     </div>

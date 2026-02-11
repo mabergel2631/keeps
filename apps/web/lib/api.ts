@@ -230,6 +230,13 @@ export const documentsApi = {
       body: JSON.stringify(data),
     });
   },
+  importFromUrl(policyId: number, url: string, docType: string = "policy"): Promise<{ ok: boolean; document_id: number }> {
+    return request<{ ok: boolean; document_id: number }>("/files/import-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ policy_id: policyId, url, doc_type: docType }),
+    });
+  },
 };
 
 export type ExtractedContact = {
