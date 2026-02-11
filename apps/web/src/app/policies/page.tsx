@@ -47,6 +47,7 @@ export default function PoliciesPage() {
   const [wizardMethod, setWizardMethod] = useState<'upload' | 'url' | 'email' | ''>('');
   const [wizardData, setWizardData] = useState<{ scope: string; policy_type: string; business_name: string }>({ scope: '', policy_type: '', business_name: '' });
   const [existingBusinessNames, setExistingBusinessNames] = useState<string[]>([]);
+  const [showNewGroupInput, setShowNewGroupInput] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [importingUrl, setImportingUrl] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -201,6 +202,7 @@ export default function PoliciesPage() {
     setExtracting(false);
     setUrlInput('');
     setImportingUrl(false);
+    setShowNewGroupInput(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -937,33 +939,109 @@ export default function PoliciesPage() {
               </div>
             )}
 
-            {/* Step 1.5: Business Name */}
+            {/* Step 1.5: Business Group */}
             {wizardStep === 15 && (
               <div>
-                <button onClick={() => setWizardStep(1)} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
-                <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', marginBottom: 20 }}>Which business is this policy for?</p>
-                <input
-                  list="business-names-list"
-                  value={wizardData.business_name}
-                  onChange={e => setWizardData(d => ({ ...d, business_name: e.target.value }))}
-                  placeholder="e.g. Acme Corp"
-                  style={{
-                    width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)', marginBottom: 16, boxSizing: 'border-box',
-                  }}
-                  autoFocus
-                />
-                <datalist id="business-names-list">
-                  {existingBusinessNames.map(n => <option key={n} value={n} />)}
-                </datalist>
-                <button
-                  onClick={() => setWizardStep(2)}
-                  disabled={!wizardData.business_name.trim()}
-                  className="btn btn-accent"
-                  style={{ padding: '12px 24px', fontSize: 15, fontWeight: 600, width: '100%' }}
-                >
-                  Next
-                </button>
+                <button onClick={() => { setWizardStep(1); setShowNewGroupInput(false); }} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
+                <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', marginBottom: 20 }}>
+                  {showNewGroupInput ? 'Name your new business group' : 'Which business group does this belong to?'}
+                </p>
+
+                {showNewGroupInput ? (
+                  /* ── New Group: text input ── */
+                  <div>
+                    <input
+                      value={wizardData.business_name}
+                      onChange={e => setWizardData(d => ({ ...d, business_name: e.target.value }))}
+                      placeholder="e.g. Acme Corp"
+                      style={{
+                        width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid var(--color-primary)',
+                        borderRadius: 'var(--radius-md)', marginBottom: 16, boxSizing: 'border-box',
+                      }}
+                      autoFocus
+                      onKeyDown={e => { if (e.key === 'Enter' && wizardData.business_name.trim()) setWizardStep(2); }}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => { setShowNewGroupInput(false); setWizardData(d => ({ ...d, business_name: '' })); }}
+                        className="btn btn-ghost"
+                        style={{ padding: '10px 16px', fontSize: 14 }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => setWizardStep(2)}
+                        disabled={!wizardData.business_name.trim()}
+                        className="btn btn-accent"
+                        style={{ flex: 1, padding: '12px 24px', fontSize: 15, fontWeight: 600 }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Group selection ── */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* Existing business groups */}
+                    {existingBusinessNames.map(name => (
+                      <button
+                        key={name}
+                        onClick={() => { setWizardData(d => ({ ...d, business_name: name })); setWizardStep(2); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+                          border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                          backgroundColor: '#fff', cursor: 'pointer', textAlign: 'left',
+                          transition: 'border-color 0.15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                      >
+                        <span style={{ fontSize: 20 }}>🏢</span>
+                        <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text)' }}>{name}</span>
+                      </button>
+                    ))}
+
+                    {/* Divider if there are existing groups */}
+                    {existingBusinessNames.length > 0 && (
+                      <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
+                    )}
+
+                    {/* + New Group */}
+                    <button
+                      onClick={() => setShowNewGroupInput(true)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+                        border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)',
+                        backgroundColor: '#f9fafb', cursor: 'pointer', textAlign: 'left',
+                        transition: 'border-color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                    >
+                      <span style={{ fontSize: 18, color: 'var(--color-primary)' }}>+</span>
+                      <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-primary)' }}>New Group</span>
+                    </button>
+
+                    {/* General Business */}
+                    <button
+                      onClick={() => { setWizardData(d => ({ ...d, business_name: '' })); setWizardStep(2); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+                        border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                        backgroundColor: '#fff', cursor: 'pointer', textAlign: 'left',
+                        transition: 'border-color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                    >
+                      <span style={{ fontSize: 20 }}>📋</span>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text)' }}>General Business</span>
+                        <span style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>No specific group</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
