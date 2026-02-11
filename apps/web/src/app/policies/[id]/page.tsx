@@ -494,7 +494,7 @@ export default function PolicyDetailPage() {
       )}
 
       {/* Policy header */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         {!editing ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -687,31 +687,31 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* What You're Protected Against - Primary understanding section */}
-      <div className="card" style={{ marginBottom: 24, backgroundColor: '#fff' }}>
+      <div className="card" style={{ marginBottom: 32, backgroundColor: '#fff' }}>
         <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>What You&apos;re Protected Against</h2>
 
         {/* Key Figures Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 20 }}>
           {policy.coverage_amount && (
-            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Coverage Limit</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)' }}>${policy.coverage_amount.toLocaleString()}</div>
             </div>
           )}
           {policy.deductible && (
-            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${policy.deductible.toLocaleString()}</div>
             </div>
           )}
           {policy.premium_amount && (
-            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Annual Premium</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>${policy.premium_amount.toLocaleString()}</div>
             </div>
           )}
           {policy.renewal_date && (
-            <div style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Renewal Date</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{policy.renewal_date}</div>
             </div>
@@ -933,7 +933,7 @@ export default function PolicyDetailPage() {
 
       {/* Deductible Tracking - Only show if policy has a deductible */}
       {policy.deductible && policy.deductible > 0 && (
-        <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card" style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2 className="section-title" style={{ margin: 0 }}>Deductible Tracking</h2>
             <button
@@ -1029,7 +1029,7 @@ export default function PolicyDetailPage() {
                   setError(err.message);
                 }
               }}
-              style={{ padding: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}
+              style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
             >
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
@@ -1169,7 +1169,7 @@ export default function PolicyDetailPage() {
 
       {/* Premium History */}
       {(premiumHistory.length > 0 || policy.premium_amount) && (
-        <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card" style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div>
               <h2 className="section-title" style={{ margin: 0 }}>Premium History</h2>
@@ -1328,7 +1328,7 @@ export default function PolicyDetailPage() {
       )}
 
       {/* Documents */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>Documents</h2>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: '#666' }}>Upload a policy PDF to auto-extract carrier, coverage, contacts and more.</p>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
@@ -1358,7 +1358,7 @@ export default function PolicyDetailPage() {
           <div style={{ display: 'grid', gap: 8 }}>
             {/* Current (most recent) document */}
             {(() => { const d = docs[0]; return (
-              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fafafa', borderRadius: 6 }}>
+              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontWeight: 500 }}>{d.filename}</span>
@@ -1398,7 +1398,7 @@ export default function PolicyDetailPage() {
                   {showDocHistory ? '\u25be' : '\u25b8'} Document History ({docs.length - 1} older)
                 </button>
                 {showDocHistory && docs.slice(1).map(d => (
-                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fafafa', borderRadius: 6 }}>
+                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontWeight: 500 }}>{d.filename}</span>
@@ -1430,7 +1430,7 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* Contacts */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Contacts</h2>
           <button onClick={() => setShowContactForm(!showContactForm)} className="btn btn-primary">
@@ -1477,7 +1477,7 @@ export default function PolicyDetailPage() {
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
             {contacts.map(c => (
-              <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fafafa', borderRadius: 6 }}>
+              <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
                 <div>
                   <span style={{ display: 'inline-block', padding: '2px 8px', marginRight: 8, borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: '#e8e8e8', color: '#555', textTransform: 'uppercase' }}>{c.role}</span>
                   <strong>{c.name || c.company || 'Unnamed'}</strong>
@@ -1496,7 +1496,7 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* Coverage Items (Inclusions / Exclusions) */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Inclusions &amp; Exclusions</h2>
           <button onClick={() => setShowCoverageForm(!showCoverageForm)} className="btn btn-primary">
@@ -1561,7 +1561,7 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* Policy Details (type-specific key-value fields) */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Policy Details</h2>
           <button onClick={toggleDetailForm} className="btn btn-primary">
@@ -1625,7 +1625,7 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* Premiums */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Premiums</h2>
           <button onClick={() => setShowPremiumForm(!showPremiumForm)} className="btn btn-primary">
@@ -1702,7 +1702,7 @@ export default function PolicyDetailPage() {
       </div>
 
       {/* Claims */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Claims</h2>
           <button onClick={() => setShowClaimForm(!showClaimForm)} className="btn btn-primary">
