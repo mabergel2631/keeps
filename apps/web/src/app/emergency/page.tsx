@@ -127,6 +127,9 @@ export default function EmergencyPage() {
   const [isUsingCache, setIsUsingCache] = useState(false);
   const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(null);
 
+  // Checklist state
+  const [checkedSteps, setCheckedSteps] = useState<Record<string, boolean>>({});
+
   // ICE Card state
   const [iceCard, setIceCard] = useState<EmergencyCardData | null>(null);
   const [showIceSetup, setShowIceSetup] = useState(false);
@@ -345,18 +348,52 @@ export default function EmergencyPage() {
         </div>
       )}
 
-      {/* Emergency Header */}
+      {/* Emergency Header - Action First */}
       <div style={{
-        background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+        background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
         color: '#fff',
         borderRadius: 'var(--radius-lg)',
-        padding: '24px 28px',
+        padding: '28px 32px',
         marginBottom: 24,
       }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700 }}>Emergency Access</h1>
-        <p style={{ margin: 0, fontSize: 14, opacity: 0.9 }}>
-          Quick access to critical policy information. Tap any field to copy it.
+        <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 700 }}>If something happens right now</h1>
+        <p style={{ margin: '0 0 20px', fontSize: 15, opacity: 0.9 }}>
+          Your critical information is below. Tap any field to copy.
         </p>
+        {!loading && data.length > 0 && (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {(() => {
+              const firstClaims = data.find(d => {
+                const c = d.contacts.find(c => c.role === 'claims') || d.contacts.find(c => c.role === 'customer_service');
+                return c?.phone;
+              });
+              const claimsPhone = firstClaims ? (firstClaims.contacts.find(c => c.role === 'claims') || firstClaims.contacts.find(c => c.role === 'customer_service'))?.phone : null;
+              return claimsPhone ? (
+                <a
+                  href={`tel:${claimsPhone.replace(/[^\d+]/g, '')}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px',
+                    backgroundColor: '#fff', color: '#dc2626', borderRadius: 8,
+                    textDecoration: 'none', fontSize: 15, fontWeight: 700,
+                  }}
+                >
+                  Call Claims Now
+                </a>
+              ) : null;
+            })()}
+            <button
+              onClick={() => { if (data.length > 0) setExpandedId(data[0].policy.id); }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px',
+                backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff',
+                border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8,
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              View Coverage Details
+            </button>
+          </div>
+        )}
       </div>
 
       {copied && (
@@ -619,9 +656,9 @@ export default function EmergencyPage() {
       ) : data.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🚨</div>
-          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>No policies yet</h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>Add your insurance policies to access them quickly in an emergency.</p>
-          <button onClick={() => router.push('/policies')} className="btn btn-primary">Go to Policies</button>
+          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>No coverage added yet</h3>
+          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>Add your policies to access them quickly in an emergency.</p>
+          <button onClick={() => router.push('/policies')} className="btn btn-primary">Add Coverage</button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -655,43 +692,60 @@ export default function EmergencyPage() {
 
                 {expanded && (
                   <div style={{ padding: '16px 20px' }}>
-                    {/* Emergency Playbook */}
+                    {/* Claim Checklist */}
                     {(() => {
                       const playbook = EMERGENCY_PLAYBOOK[p.policy_type.toLowerCase()] || DEFAULT_PLAYBOOK;
                       return (
                         <div style={{
-                          backgroundColor: '#fef3c7',
-                          border: '1px solid #fcd34d',
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
                           borderRadius: 'var(--radius-md)',
-                          padding: 16,
+                          padding: 20,
                           marginBottom: 16,
                         }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: '#92400e' }}>
+                          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14, color: 'var(--color-text)' }}>
                             {playbook.title}
                           </div>
-                          <ol style={{
-                            margin: 0,
-                            paddingLeft: 20,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 6,
-                          }}>
-                            {playbook.steps.map((step, i) => (
-                              <li key={i} style={{ fontSize: 13, color: '#78350f', lineHeight: 1.4 }}>
-                                {step}
-                              </li>
-                            ))}
-                          </ol>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {playbook.steps.map((step, i) => {
+                              const key = `${p.id}-${i}`;
+                              const checked = checkedSteps[key] || false;
+                              return (
+                                <label
+                                  key={i}
+                                  style={{
+                                    display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer',
+                                    padding: '8px 10px', borderRadius: 6,
+                                    backgroundColor: checked ? '#f0fdf4' : 'transparent',
+                                    transition: 'background-color 0.15s',
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => setCheckedSteps(prev => ({ ...prev, [key]: !prev[key] }))}
+                                    style={{ marginTop: 2, width: 16, height: 16, accentColor: '#22c55e', flexShrink: 0 }}
+                                  />
+                                  <span style={{
+                                    fontSize: 14, color: checked ? '#166534' : 'var(--color-text-secondary)', lineHeight: 1.5,
+                                    textDecoration: checked ? 'line-through' : 'none',
+                                  }}>
+                                    {step}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
                           {playbook.tip && (
                             <div style={{
-                              marginTop: 12,
-                              paddingTop: 12,
-                              borderTop: '1px solid #fcd34d',
-                              fontSize: 12,
-                              color: '#92400e',
+                              marginTop: 14,
+                              paddingTop: 14,
+                              borderTop: '1px solid #e5e7eb',
+                              fontSize: 13,
+                              color: 'var(--color-text-muted)',
                               fontStyle: 'italic',
                             }}>
-                              💡 {playbook.tip}
+                              {playbook.tip}
                             </div>
                           )}
                         </div>

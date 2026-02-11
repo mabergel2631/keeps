@@ -371,7 +371,7 @@ export default function PolicyDetailPage() {
     <div style={{ maxWidth: 960, margin: '0 auto', padding: 24 }}>
       {/* Breadcrumb */}
       <nav style={{ marginBottom: 16, fontSize: 13, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button onClick={() => router.push('/policies')} className="btn btn-ghost" style={{ padding: 0, fontSize: 13, color: 'var(--color-accent)' }}>Policies</button>
+        <button onClick={() => router.push('/policies')} className="btn btn-ghost" style={{ padding: 0, fontSize: 13, color: 'var(--color-accent)' }}>Coverage</button>
         <span>/</span>
         <span style={{ color: 'var(--color-text)' }}>{policy.nickname || policy.carrier}</span>
       </nav>
@@ -686,9 +686,9 @@ export default function PolicyDetailPage() {
         )}
       </div>
 
-      {/* Coverage Summary - Primary understanding section */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>Coverage Summary</h2>
+      {/* What You're Protected Against - Primary understanding section */}
+      <div className="card" style={{ marginBottom: 24, backgroundColor: '#fff' }}>
+        <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>What You&apos;re Protected Against</h2>
 
         {/* Key Figures Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 20 }}>
@@ -726,7 +726,7 @@ export default function PolicyDetailPage() {
 
           return (
             <div style={{ marginBottom: 16 }}>
-              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#166534' }}>What&apos;s Covered</h3>
+              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#166534' }}>Covered</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {inclusions.slice(0, displayCount).map(ci => (
                   <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#f0fdf4', color: '#166534', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
@@ -763,7 +763,7 @@ export default function PolicyDetailPage() {
 
           return (
             <div>
-              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Not Covered</h3>
+              <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Potential Risk Areas</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {exclusions.slice(0, displayCount).map(ci => (
                   <span key={ci.id} style={{ padding: '4px 10px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: 16, fontSize: 12, fontWeight: 500 }}>
@@ -1079,8 +1079,8 @@ export default function PolicyDetailPage() {
           <div className="card" style={{ marginBottom: 24, background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fecaca' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
-                <h2 style={{ margin: '0 0 4px', fontSize: 18, color: '#991b1b' }}>🚨 Need to File a Claim?</h2>
-                <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>Start your claim with policy info ready to go</p>
+                <h2 style={{ margin: '0 0 4px', fontSize: 18, color: '#991b1b' }}>If something happens</h2>
+                <p style={{ margin: 0, fontSize: 13, color: '#b91c1c' }}>Everything you need to start a claim</p>
               </div>
             </div>
 

@@ -7,7 +7,7 @@ import { APP_NAME } from '../config';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/policies', label: 'Policies', icon: '📋' },
+  { href: '/policies', label: 'Coverage', icon: '📋' },
   { href: '/emergency', label: 'Emergency', icon: '🚨', urgent: true },
   { href: '/audit', label: 'Alerts', icon: '🔔' },
   { href: '/policies/compare', label: 'Compare', icon: '⚖️' },
@@ -71,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
         >
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>{APP_NAME}</div>
-          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>Insurance Manager</div>
+          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>Coverage Intelligence</div>
         </div>
 
         <nav style={{ flex: 1, padding: '12px 8px' }}>
@@ -163,16 +163,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             position: 'fixed',
             bottom: 24,
             right: 24,
-            width: 60,
-            height: 60,
+            width: 64,
+            height: 64,
             borderRadius: '50%',
             backgroundColor: '#dc2626',
             color: '#fff',
-            border: 'none',
+            border: '3px solid rgba(255,255,255,0.9)',
             fontSize: 16,
             fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+            boxShadow: '0 4px 20px rgba(220, 38, 38, 0.5)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',

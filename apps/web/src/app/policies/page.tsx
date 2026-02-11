@@ -432,19 +432,51 @@ export default function PoliciesPage() {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* ═══════════════════════════════════════════════════════════════
-            1️⃣ SYSTEM STATE - Status at a glance
+            1️⃣ COVERAGE STATUS - Status at a glance
         ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ marginBottom: 48 }}>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Insurance Overview</span>
-          </div>
-          <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 12px', color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-            {loading ? 'Loading...' : systemStatus.message}
+        <section style={{ marginBottom: 40 }}>
+          <h1 style={{ fontSize: 34, fontWeight: 700, margin: '0 0 20px', color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+            {loading ? 'Loading...' : 'Coverage Overview'}
           </h1>
-          {!loading && daysToNextRenewal !== null && daysToNextRenewal > 0 && (
-            <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: 0 }}>
-              Next renewal: <strong>{nextRenewal?.nickname || nextRenewal?.carrier}</strong> in {daysToNextRenewal} days
-            </p>
+
+          {!loading && (
+            <div style={{
+              padding: '24px 28px',
+              backgroundColor: '#fff',
+              border: `1px solid ${urgentAlerts.length > 0 ? '#fecaca' : '#e5e7eb'}`,
+              borderRadius: 'var(--radius-lg)',
+              borderLeft: `4px solid ${urgentAlerts.length > 0 ? '#dc2626' : coverageGaps.filter(g => g.severity !== 'info').length > 0 ? '#f59e0b' : '#22c55e'}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%',
+                  backgroundColor: urgentAlerts.length > 0 ? '#dc2626' : coverageGaps.filter(g => g.severity !== 'info').length > 0 ? '#f59e0b' : '#22c55e',
+                }} />
+                <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)' }}>
+                  {urgentAlerts.length > 0
+                    ? `${urgentAlerts.length} item${urgentAlerts.length > 1 ? 's' : ''} need${urgentAlerts.length === 1 ? 's' : ''} attention`
+                    : activePolicies.length === 0
+                    ? 'Get started by adding your first policy'
+                    : 'No immediate risks detected'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                {daysToNextRenewal !== null && daysToNextRenewal > 0 && (
+                  <div>Next renewal: <strong>{nextRenewal?.nickname || nextRenewal?.carrier}</strong> — {daysToNextRenewal} days</div>
+                )}
+                {daysToNextRenewal !== null && daysToNextRenewal <= 0 && (
+                  <div style={{ color: '#dc2626', fontWeight: 500 }}>A policy renewal is overdue</div>
+                )}
+                {coverageGaps.filter(g => g.severity !== 'info').length > 0 ? (
+                  <div>Potential gaps: {coverageGaps.filter(g => g.severity !== 'info').length} detected</div>
+                ) : activePolicies.length > 0 ? (
+                  <div>Potential gaps: None detected</div>
+                ) : null}
+                {annualSpend > 0 && (
+                  <div>Annual premium: ${(annualSpend / 100).toLocaleString()}</div>
+                )}
+              </div>
+            </div>
           )}
         </section>
 
@@ -562,15 +594,22 @@ export default function PoliciesPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
-            2️⃣ MEANING - Insights
+            2️⃣ COVERAGE INSIGHTS
         ═══════════════════════════════════════════════════════════════ */}
         {!loading && insights.length > 0 && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Insights</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {insights.slice(0, 4).map((insight, i) => (
-                <p key={i} style={{ fontSize: 15, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{insight}</p>
-              ))}
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Coverage Insights</h2>
+            <div style={{
+              padding: '20px 24px',
+              backgroundColor: '#fff',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {insights.slice(0, 4).map((insight, i) => (
+                  <p key={i} style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{insight}</p>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -578,7 +617,7 @@ export default function PoliciesPage() {
         {/* Urgent Alerts */}
         {urgentAlerts.length > 0 && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Needs Attention</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Needs Attention</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {urgentAlerts.map((a, i) => (
                 <div
@@ -605,7 +644,7 @@ export default function PoliciesPage() {
         ═══════════════════════════════════════════════════════════════ */}
         {!loading && coverageGaps.length > 0 && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
               Coverage Gaps
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -687,16 +726,16 @@ export default function PoliciesPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
-            3️⃣ ACTION - Primary actions (max 4)
+            3️⃣ ACTIONS
         ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ marginBottom: 48 }}>
+        <section style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button
               onClick={() => setShowAddModal(true)}
               className="btn btn-accent"
               style={{ padding: '14px 28px', fontSize: 15, fontWeight: 600 }}
             >
-              + Add Policy
+              + Add Coverage
             </button>
             <button
               onClick={() => router.push('/emergency')}
@@ -718,12 +757,12 @@ export default function PoliciesPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════
-            4️⃣ DETAIL - Policy list (comes last)
+            4️⃣ YOUR COVERAGE
         ═══════════════════════════════════════════════════════════════ */}
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
-              Policies {activePolicies.length > 0 && `(${activePolicies.length})`}
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+              Your Coverage {activePolicies.length > 0 && `(${activePolicies.length})`}
             </h2>
             {activePolicies.length > 3 && (
               <input
@@ -852,7 +891,7 @@ export default function PoliciesPage() {
             backgroundColor: '#fff', borderRadius: 'var(--radius-lg)', padding: 32, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Add Policy</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Add Coverage</h2>
               <button onClick={() => { setShowAddModal(false); resetWizard(); }} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--color-text-muted)' }}>×</button>
             </div>
 
@@ -869,8 +908,8 @@ export default function PoliciesPage() {
                     }}
                   >
                     <span style={{ fontSize: 32 }}>📄</span>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>Upload PDF</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)', textAlign: 'center' }}>Upload a document and auto-extract details</span>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>Upload Policy</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)', textAlign: 'center' }}>We&apos;ll extract everything automatically</span>
                   </button>
                   <button
                     onClick={() => { setWizardMethod('url'); setWizardStep(1); }}
@@ -1075,8 +1114,11 @@ export default function PoliciesPage() {
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
                   <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: 'var(--color-text)' }}>Upload Policy Document</h3>
-                  <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                  <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--color-text-secondary)' }}>
                     Upload a PDF and we&apos;ll extract the details automatically.
+                  </p>
+                  <p style={{ margin: '0 0 24px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    Our AI reads your policy and organizes coverage instantly.
                   </p>
                   <input ref={createFileRef} type="file" accept=".pdf" style={{ marginBottom: 16 }} />
                   <div>

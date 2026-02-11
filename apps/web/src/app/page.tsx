@@ -53,7 +53,7 @@ export default function Home() {
               cursor: 'pointer',
             }}
           >
-            {token ? 'Dashboard' : 'Sign in'}
+            {token ? 'My Coverage' : 'Sign in'}
           </button>
         </nav>
       </header>
@@ -69,10 +69,10 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontSize: 44, fontWeight: 700, margin: '0 0 20px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-            Know your coverage. Before you need it.
+            See exactly what you&apos;re covered for — instantly.
           </h1>
           <p style={{ fontSize: 18, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.7, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
-            {APP_NAME} turns insurance PDFs into structured, searchable coverage information—limits, deductibles, renewals, and key contacts—so you can make decisions quickly and avoid surprises.
+            Know what&apos;s protected, what&apos;s at risk, and what to do next. {APP_NAME} turns your insurance documents into clear, actionable coverage intelligence.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
             <button
@@ -88,7 +88,7 @@ export default function Home() {
                 cursor: 'pointer',
               }}
             >
-              {token ? 'Go to Dashboard' : 'Get Started'}
+              {token ? 'View My Coverage' : 'Get Started'}
             </button>
             <button
               onClick={() => scrollTo('how-it-works')}
@@ -118,10 +118,10 @@ export default function Home() {
       <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 24px', color: 'var(--color-text)' }}>
-            Insurance shouldn&apos;t be a scavenger hunt.
+            Your coverage shouldn&apos;t be a mystery.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.8, margin: '0 0 32px' }}>
-            Policies live across email threads, portals, PDFs, and folders. When something happens, the questions are always the same:
+            Policies are scattered across emails, portals, and PDFs. When something happens, you need answers fast:
           </p>
           <div style={{ textAlign: 'left', maxWidth: 400, margin: '0 auto 32px', fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 2.2 }}>
             <div>• What am I covered for?</div>
@@ -130,7 +130,7 @@ export default function Home() {
             <div>• When does this renew—and what changed?</div>
           </div>
           <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-primary)', margin: 0 }}>
-            {APP_NAME} gives you one clear answer: your coverage, organized and understood.
+            {APP_NAME} gives you one clear answer — instantly.
           </p>
         </div>
       </section>
@@ -171,10 +171,10 @@ export default function Home() {
       <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
-            Not a dashboard. A coverage intelligence layer.
+            Intelligence, not just storage.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 32px', lineHeight: 1.7 }}>
-            {APP_NAME} isn&apos;t just a place to store policies. It turns documents into usable knowledge—so you can see what you have, what&apos;s missing, and what needs attention.
+            {APP_NAME} turns documents into knowledge — so you see what you have, what&apos;s missing, and what needs attention.
           </p>
           <div style={{ textAlign: 'left', maxWidth: 450, margin: '0 auto', fontSize: 15, color: 'var(--color-text)', lineHeight: 2.2 }}>
             <div>• Limits and deductibles in plain view</div>
@@ -319,7 +319,7 @@ export default function Home() {
               cursor: 'pointer',
             }}
           >
-            {token ? 'Go to Dashboard' : 'Get Started'}
+            {token ? 'View My Coverage' : 'Get Started'}
           </button>
         </div>
       </section>
