@@ -305,6 +305,24 @@ export default function EmergencyPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+      {/* Back navigation */}
+      <button
+        onClick={() => router.push('/policies')}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'none',
+          border: 'none',
+          color: 'var(--color-text-secondary)',
+          fontSize: 14,
+          cursor: 'pointer',
+          padding: '0 0 16px',
+        }}
+      >
+        ← Policies
+      </button>
+
       {/* Offline Banner */}
       {(!isOnline || isUsingCache) && (
         <div style={{
