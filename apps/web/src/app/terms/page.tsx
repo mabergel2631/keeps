@@ -61,8 +61,12 @@ export default function TermsPage() {
           (&quot;Your Content&quot;). We do not claim any intellectual property rights over Your Content.
         </p>
         <p>
-          You grant us a limited license to host, store, and process Your Content solely for the purpose
-          of providing the Service to you. This license ends when you delete Your Content or your account.
+          You grant us a limited license to host, store, and process Your Content for the purpose
+          of providing the Service to you. We may also use aggregated, anonymized data derived from
+          Your Content to improve our services and understand coverage trends — this data cannot
+          identify you. Your individual coverage data is never shared with third parties without
+          your explicit permission. If we ever offer services that involve sharing your information
+          with partners, you will always choose whether to participate.
         </p>
         <p>
           You are responsible for the accuracy of information you enter. {APP_NAME} uses automated

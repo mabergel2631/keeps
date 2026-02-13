@@ -28,9 +28,9 @@ export default function PrivacyPage() {
         {/* Preamble */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '20px 24px', marginBottom: 40 }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: 16, lineHeight: 1.7 }}>
-            The short version: We collect only what we need to run {APP_NAME}. We never sell your data.
-            We never share it with advertisers, data brokers, or insurance companies. Your insurance
-            information belongs to you, and we treat it accordingly.
+            The short version: Your individual coverage data belongs to you and is never shared
+            with third parties without your explicit permission. We collect only what we need
+            to run {APP_NAME}, and we treat your information accordingly.
           </p>
         </div>
 
@@ -89,15 +89,25 @@ export default function PrivacyPage() {
         </ul>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
-          What we will never do
+          How we protect your data
         </h2>
-        <p>This is as important as what we do. We will <strong>never</strong>:</p>
+        <p>
+          Your individual coverage data belongs to you and is never shared with third parties
+          without your explicit permission.
+        </p>
+        <p>
+          We may use aggregated, anonymized insights to improve our services and better understand
+          coverage trends. These insights cannot identify you.
+        </p>
+        <p>
+          If we ever offer services that involve sharing your information with partners, you will
+          always choose whether to participate.
+        </p>
+        <p>In addition, we will <strong>never</strong>:</p>
         <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
-          <li style={{ marginBottom: 8 }}><strong>Sell your data</strong> — to anyone, for any reason, under any circumstances</li>
           <li style={{ marginBottom: 8 }}><strong>Share your data with advertisers</strong> — we do not display ads and have no advertising relationships</li>
-          <li style={{ marginBottom: 8 }}><strong>Share your data with insurance companies, brokers, or agents</strong> — unless you explicitly choose to share it using our sharing features</li>
           <li style={{ marginBottom: 8 }}><strong>Use your data to market insurance products to you</strong> — we are a tool, not a marketplace</li>
-          <li style={{ marginBottom: 8 }}><strong>Mine your data for profiling or scoring</strong> — your information is used only to provide the Service to you</li>
+          <li style={{ marginBottom: 8 }}><strong>Sell your personal information to data brokers</strong> — your name, email, and individual policy details are never sold</li>
         </ul>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
@@ -109,7 +119,7 @@ export default function PrivacyPage() {
           <li style={{ marginBottom: 8 }}><strong>Service providers:</strong> We use a small number of third-party services to operate {APP_NAME} (cloud hosting, file storage, payment processing). These providers access your data only to perform services on our behalf and are contractually obligated to protect it.</li>
           <li style={{ marginBottom: 8 }}><strong>Legal requirements:</strong> We may disclose information if required by law, regulation, legal process, or governmental request. We will notify you before doing so unless legally prohibited.</li>
         </ul>
-        <p>We do not have data-sharing relationships with any insurance companies, brokers, agents, data brokers, advertisers, or analytics companies.</p>
+        <p>We do not share your individual data with insurance companies, brokers, agents, or advertisers without your explicit consent.</p>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
           Document extraction and AI processing
