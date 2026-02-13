@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     cors_origins: str = ""
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    from_email: str = "noreply@covrabl.com"
+    app_url: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

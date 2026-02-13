@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.db import engine, Base
-from app.models import User, Policy, Contact, CoverageItem, PolicyDetail  # noqa: F401 — register models
+from app.models import User, Policy, Contact, CoverageItem, PolicyDetail, PasswordReset  # noqa: F401 — register models
 from app.models_documents import Document  # noqa: F401
 from app.models_features import Premium, Claim, RenewalReminder, AuditLog, PolicyShare, EmergencyCard, PremiumHistory, PolicyDelta, DeltaExplanation, CoverageScore, InboundAddress, InboundEmail, PolicyDraft  # noqa: F401
 

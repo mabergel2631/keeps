@@ -137,6 +137,20 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     });
   },
+  forgotPassword(email: string) {
+    return request<{ ok: boolean; message: string }>("/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  },
+  resetPassword(token: string, password: string) {
+    return request<{ ok: boolean }>("/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+  },
 };
 
 // ── Policies API ─────────────────────────────────────

@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Date, DateTime, ForeignKey, func
+from sqlalchemy import String, Integer, Boolean, Date, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -62,6 +62,17 @@ class Contact(Base):
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PasswordReset(Base):
+    __tablename__ = "password_resets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    token: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    expires_at: Mapped[DateTime] = mapped_column(DateTime)
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
 

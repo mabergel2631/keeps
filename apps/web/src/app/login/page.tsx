@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../../lib/auth';
 import { authApi } from '../../../lib/api';
 import { APP_NAME, APP_DESCRIPTION } from '../config';
@@ -103,6 +104,14 @@ export default function LoginPage() {
               style={{ marginBottom: passwordError ? 4 : 28 }}
             />
             {passwordError && <span className="form-error" style={{ marginBottom: 24, display: 'block' }}>{passwordError}</span>}
+
+            {mode === 'login' && (
+              <div style={{ textAlign: 'right', marginBottom: 20, marginTop: -12 }}>
+                <Link href="/forgot-password" style={{ fontSize: 13, color: 'var(--color-accent)', textDecoration: 'none' }}>
+                  Forgot your password?
+                </Link>
+              </div>
+            )}
 
             <button
               type="submit"
