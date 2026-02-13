@@ -342,6 +342,7 @@ export default function Home() {
       <footer style={{ padding: '24px', textAlign: 'center', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)', fontSize: 13 }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12 }}>
           <span onClick={() => router.push('/privacy')} style={{ cursor: 'pointer' }}>Privacy</span>
+          <span onClick={() => router.push('/terms')} style={{ cursor: 'pointer' }}>Terms</span>
         </div>
         {APP_NAME} — Coverage intelligence for your insurance
       </footer>

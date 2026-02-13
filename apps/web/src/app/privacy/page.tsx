@@ -1,89 +1,240 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { APP_NAME } from '../config';
-
-const getPrinciples = (name: string) => [
-  {
-    title: 'You Own Your Data',
-    desc: `Your policy documents, personal information, and all data you store in ${name} belongs to you. We are a vault, not a marketplace.`,
-    icon: '🔐',
-  },
-  {
-    title: 'No Data Resale',
-    desc: 'We will never sell, share, or monetize your insurance data. Your information is never shared with carriers, brokers, or third-party marketplaces.',
-    icon: '🚫',
-  },
-  {
-    title: 'No Forced Quoting',
-    desc: `${name} will never push insurance quotes or try to switch your carriers. We are carrier-agnostic and work for you, not insurers.`,
-    icon: '🛡️',
-  },
-  {
-    title: 'No Carrier Bias',
-    desc: 'We have no financial relationships with insurance carriers. Your data is organized objectively without any preferential treatment.',
-    icon: '⚖️',
-  },
-  {
-    title: 'Encryption & Security',
-    desc: 'All data is encrypted in transit using TLS. Authentication is handled via secure JWT tokens. Your password is hashed with bcrypt and never stored in plain text.',
-    icon: '🔒',
-  },
-  {
-    title: 'Audit Trail',
-    desc: `Every action in ${name} is logged. You can review who accessed your policies, when documents were uploaded, and what changes were made.`,
-    icon: '📋',
-  },
-  {
-    title: 'Granular Sharing Controls',
-    desc: 'When you share policies with family, advisors, or attorneys, you control the permission level. You can revoke access at any time.',
-    icon: '👥',
-  },
-  {
-    title: 'Delete Anytime',
-    desc: 'You can delete any policy, document, or your entire account at any time. When you delete data, it is permanently removed.',
-    icon: '🗑️',
-  },
-];
 
 export default function PrivacyPage() {
   const router = useRouter();
+  const effectiveDate = 'February 12, 2026';
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
-      <div style={{ marginBottom: 32, paddingBottom: 20, borderBottom: '1px solid var(--color-border)' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 700, color: 'var(--color-primary)' }}>
-          Privacy & Security
-        </h1>
-        <p style={{ margin: 0, fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-          {APP_NAME} is built on a simple principle: <strong>your insurance data belongs to you</strong>.
-          We are a secure vault — not a marketplace, not a lead generator, not an insurance seller.
-        </p>
+    <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px 80px' }}>
+      <div style={{ marginBottom: 40 }}>
+        <Link href="/" style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none' }}>
+          {APP_NAME}
+        </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {getPrinciples(APP_NAME).map(p => (
-          <div key={p.title} className="card">
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <div style={{ fontSize: 28, flexShrink: 0 }}>{p.icon}</div>
-              <div>
-                <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>{p.title}</h3>
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{p.desc}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 8px', color: 'var(--color-text)' }}>
+        Privacy Policy
+      </h1>
+      <p style={{ margin: '0 0 40px', fontSize: 14, color: 'var(--color-text-muted)' }}>
+        Effective date: {effectiveDate}
+      </p>
+
+      <div style={{ fontSize: 15, color: 'var(--color-text)', lineHeight: 1.8 }}>
+
+        {/* Preamble */}
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '20px 24px', marginBottom: 40 }}>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 16, lineHeight: 1.7 }}>
+            The short version: We collect only what we need to run {APP_NAME}. We never sell your data.
+            We never share it with advertisers, data brokers, or insurance companies. Your insurance
+            information belongs to you, and we treat it accordingly.
+          </p>
+        </div>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Our commitment
+        </h2>
+        <p>
+          {APP_NAME} handles sensitive personal and financial information. We take that responsibility
+          seriously. This policy describes what we collect, why we collect it, and what we do (and
+          don&apos;t do) with your information. We have written it in plain language because we believe
+          you should be able to understand how your data is handled without a law degree.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          What we collect
+        </h2>
+
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '24px 0 8px', color: 'var(--color-text)' }}>
+          Information you provide directly
+        </h3>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Account information:</strong> Your email address and password (stored as a one-way hash — we cannot see your password)</li>
+          <li style={{ marginBottom: 8 }}><strong>Insurance documents:</strong> Policy PDFs, declarations pages, and other documents you upload</li>
+          <li style={{ marginBottom: 8 }}><strong>Policy information:</strong> Carrier names, policy numbers, coverage amounts, deductibles, renewal dates, premium amounts, claims data, and other details you enter or that are extracted from your documents</li>
+          <li style={{ marginBottom: 8 }}><strong>Contact information:</strong> Names, phone numbers, and email addresses of insurance agents, brokers, or other contacts you choose to store</li>
+          <li style={{ marginBottom: 8 }}><strong>Emergency card information:</strong> Names and phone numbers of emergency contacts you choose to include on your emergency access card</li>
+        </ul>
+
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '24px 0 8px', color: 'var(--color-text)' }}>
+          Information collected automatically
+        </h3>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Log data:</strong> When you use the Service, our servers automatically record information including your IP address, browser type, and the pages you visit. This is standard for all web services and is used solely for security and debugging purposes.</li>
+        </ul>
+
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '24px 0 8px', color: 'var(--color-text)' }}>
+          What we do NOT collect
+        </h3>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}>Social Security numbers</li>
+          <li style={{ marginBottom: 8 }}>Bank account or credit card numbers (payment processing is handled entirely by Stripe)</li>
+          <li style={{ marginBottom: 8 }}>Location data</li>
+          <li style={{ marginBottom: 8 }}>Data from third-party tracking or advertising networks</li>
+        </ul>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          How we use your information
+        </h2>
+        <p>We use your information for the following purposes and no others:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}>To provide the Service — storing, organizing, and displaying your insurance information</li>
+          <li style={{ marginBottom: 8 }}>To extract data from documents you upload, so you don&apos;t have to enter it manually</li>
+          <li style={{ marginBottom: 8 }}>To send you transactional emails (password resets, account notifications)</li>
+          <li style={{ marginBottom: 8 }}>To send you renewal reminders and alerts you have opted into</li>
+          <li style={{ marginBottom: 8 }}>To maintain the security and integrity of the Service</li>
+        </ul>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          What we will never do
+        </h2>
+        <p>This is as important as what we do. We will <strong>never</strong>:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Sell your data</strong> — to anyone, for any reason, under any circumstances</li>
+          <li style={{ marginBottom: 8 }}><strong>Share your data with advertisers</strong> — we do not display ads and have no advertising relationships</li>
+          <li style={{ marginBottom: 8 }}><strong>Share your data with insurance companies, brokers, or agents</strong> — unless you explicitly choose to share it using our sharing features</li>
+          <li style={{ marginBottom: 8 }}><strong>Use your data to market insurance products to you</strong> — we are a tool, not a marketplace</li>
+          <li style={{ marginBottom: 8 }}><strong>Mine your data for profiling or scoring</strong> — your information is used only to provide the Service to you</li>
+        </ul>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          How we share your information
+        </h2>
+        <p>We share your information only in these limited circumstances:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>When you choose to share:</strong> When you use our sharing features (policy sharing, emergency cards), the information you designate is made available to the people you choose. You control this entirely.</li>
+          <li style={{ marginBottom: 8 }}><strong>Service providers:</strong> We use a small number of third-party services to operate {APP_NAME} (cloud hosting, file storage, payment processing). These providers access your data only to perform services on our behalf and are contractually obligated to protect it.</li>
+          <li style={{ marginBottom: 8 }}><strong>Legal requirements:</strong> We may disclose information if required by law, regulation, legal process, or governmental request. We will notify you before doing so unless legally prohibited.</li>
+        </ul>
+        <p>We do not have data-sharing relationships with any insurance companies, brokers, agents, data brokers, advertisers, or analytics companies.</p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Document extraction and AI processing
+        </h2>
+        <p>
+          When you upload a document, we use artificial intelligence to extract key information
+          (carrier, policy number, coverage amounts, etc.) so you don&apos;t have to type it manually.
+          This processing is performed solely to provide the Service to you. Extracted data is stored
+          in your account and is not used to train AI models, build datasets, or for any purpose
+          other than serving you.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Data security
+        </h2>
+        <p>We protect your data with industry-standard security practices:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Encryption in transit:</strong> All data transmitted between your device and our servers is encrypted using TLS (Transport Layer Security)</li>
+          <li style={{ marginBottom: 8 }}><strong>Password security:</strong> Your password is hashed using bcrypt with a high work factor. We never store or have access to your plain-text password</li>
+          <li style={{ marginBottom: 8 }}><strong>Authentication:</strong> Sessions are managed via secure, time-limited JWT tokens</li>
+          <li style={{ marginBottom: 8 }}><strong>Access controls:</strong> Your data is isolated to your account. Other users cannot access your information unless you explicitly grant them permission</li>
+          <li style={{ marginBottom: 8 }}><strong>Audit logging:</strong> All significant actions are logged so you can review access and changes to your data</li>
+        </ul>
+        <p>
+          No system is perfectly secure. While we implement strong protections, we cannot guarantee
+          absolute security. We will notify you promptly if we become aware of a breach affecting your data.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Data retention and deletion
+        </h2>
+        <p>
+          We retain your data for as long as your account is active. When you delete a policy,
+          document, or other content, it is permanently removed from our systems.
+        </p>
+        <p>
+          When you delete your account, all of your data — including policies, documents, contacts,
+          emergency cards, and personal information — is permanently deleted. This action is
+          irreversible. We recommend exporting your data before deleting your account.
+        </p>
+        <p>
+          We may retain anonymized, aggregated data (such as total number of users) that cannot
+          be used to identify you.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Your rights
+        </h2>
+        <p>You have the right to:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Access your data:</strong> You can view all information stored in your account at any time</li>
+          <li style={{ marginBottom: 8 }}><strong>Export your data:</strong> You can export your policy data in standard formats</li>
+          <li style={{ marginBottom: 8 }}><strong>Correct your data:</strong> You can edit any information in your account at any time</li>
+          <li style={{ marginBottom: 8 }}><strong>Delete your data:</strong> You can delete individual items or your entire account at any time</li>
+          <li style={{ marginBottom: 8 }}><strong>Revoke sharing:</strong> You can revoke any sharing permissions you have granted at any time</li>
+        </ul>
+        <p>
+          If you are a resident of the European Economic Area (EEA), you have additional rights under
+          GDPR, including the right to data portability and the right to lodge a complaint with a
+          supervisory authority. If you are a California resident, you have additional rights under
+          the CCPA, including the right to know what personal information is collected and the right
+          to request deletion.
+        </p>
+        <p>
+          To exercise any of these rights, contact us at{' '}
+          <a href="mailto:privacy@covrabl.com" style={{ color: 'var(--color-accent)' }}>privacy@covrabl.com</a>.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Cookies
+        </h2>
+        <p>
+          {APP_NAME} uses only essential cookies and local storage required for the Service to function
+          (such as keeping you logged in). We do not use tracking cookies, advertising cookies, or
+          third-party analytics cookies.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Children&apos;s privacy
+        </h2>
+        <p>
+          {APP_NAME} is not directed to children under 18. We do not knowingly collect personal
+          information from children. If you believe a child has provided us with personal information,
+          please contact us and we will delete it promptly.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Third-party services
+        </h2>
+        <p>We use the following third-party services to operate {APP_NAME}:</p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px' }}>
+          <li style={{ marginBottom: 8 }}><strong>Cloud hosting and infrastructure</strong> — for running the application and storing data</li>
+          <li style={{ marginBottom: 8 }}><strong>Object storage</strong> — for securely storing uploaded documents</li>
+          <li style={{ marginBottom: 8 }}><strong>Stripe</strong> — for payment processing (we never see or store your full credit card number)</li>
+          <li style={{ marginBottom: 8 }}><strong>AI providers</strong> — for document extraction (documents are processed and not retained by the provider)</li>
+        </ul>
+        <p>
+          Each of these providers is bound by their own privacy policies and contractual obligations
+          to protect your data.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Changes to this policy
+        </h2>
+        <p>
+          We may update this Privacy Policy from time to time. When we make material changes,
+          we will notify you by email or through the Service at least 30 days before the changes
+          take effect. We will always keep the prior version available for your review.
+        </p>
+
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
+          Contact
+        </h2>
+        <p>
+          If you have questions about this Privacy Policy or how your data is handled, please contact us:
+        </p>
+        <ul style={{ paddingLeft: 24, margin: '8px 0 16px', listStyle: 'none' }}>
+          <li style={{ marginBottom: 8 }}>Email: <a href="mailto:privacy@covrabl.com" style={{ color: 'var(--color-accent)' }}>privacy@covrabl.com</a></li>
+          <li style={{ marginBottom: 8 }}>General: <a href="mailto:support@covrabl.com" style={{ color: 'var(--color-accent)' }}>support@covrabl.com</a></li>
+        </ul>
       </div>
 
-      <div className="card" style={{ backgroundColor: 'var(--color-primary-dark)', color: '#fff', textAlign: 'center', padding: 32 }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>Your trust is our foundation</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 14, opacity: 0.85, lineHeight: 1.6 }}>
-          {APP_NAME} exists to serve you — not advertisers, not carriers, not data brokers.
-          If you ever have questions about how your data is handled, reach out anytime.
-        </p>
-        <button onClick={() => router.push('/policies')} className="btn" style={{ backgroundColor: 'var(--color-accent)', color: '#fff', padding: '10px 24px' }}>
-          Back to Policies
-        </button>
+      <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 24, fontSize: 13, color: 'var(--color-text-muted)' }}>
+        <Link href="/terms" style={{ color: 'var(--color-accent)', textDecoration: 'none' }}>Terms of Service</Link>
+        <Link href="/" style={{ color: 'var(--color-accent)', textDecoration: 'none' }}>Home</Link>
       </div>
     </div>
   );
