@@ -1,7 +1,9 @@
+import logging
 import secrets
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,7 +15,38 @@ from .email import send_reset_email
 from .models import User, PasswordReset
 from .schemas import UserCreate, UserOut, Token
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# ── Login rate limiting ───────────────────────────────
+# Track failed attempts per IP: {ip: [(timestamp, ...), ...]}
+_failed_attempts: dict[str, list[float]] = defaultdict(list)
+MAX_ATTEMPTS = 5
+LOCKOUT_SECONDS = 900  # 15 minutes
+
+
+def _check_rate_limit(request: Request) -> None:
+    ip = request.client.host if request.client else "unknown"
+    now = datetime.now(timezone.utc).timestamp()
+    # Prune old attempts outside the lockout window
+    _failed_attempts[ip] = [t for t in _failed_attempts[ip] if now - t < LOCKOUT_SECONDS]
+    if len(_failed_attempts[ip]) >= MAX_ATTEMPTS:
+        logger.warning("Login rate limit exceeded for IP %s", ip)
+        raise HTTPException(
+            status_code=429,
+            detail="Too many login attempts. Please try again in 15 minutes.",
+        )
+
+
+def _record_failure(request: Request) -> None:
+    ip = request.client.host if request.client else "unknown"
+    _failed_attempts[ip].append(datetime.now(timezone.utc).timestamp())
+
+
+def _clear_failures(request: Request) -> None:
+    ip = request.client.host if request.client else "unknown"
+    _failed_attempts.pop(ip, None)
 
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
@@ -30,10 +63,13 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(payload: UserCreate, db: Session = Depends(get_db)):
+def login(payload: UserCreate, request: Request, db: Session = Depends(get_db)):
+    _check_rate_limit(request)
     user = db.execute(select(User).where(User.email == payload.email)).scalar_one_or_none()
     if not user or not verify_password(payload.password, user.hashed_password):
+        _record_failure(request)
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    _clear_failures(request)
     return Token(access_token=create_access_token(user.id))
 
 
