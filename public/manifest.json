@@ -1,7 +1,7 @@
 {
   "name": "Covrabl",
   "short_name": "Covrabl",
-  "description": "Coverage intelligence for your insurance",
+  "description": "AI-powered coverage analysis that scores your protection, detects gaps, tracks renewals, and explains policy changes — so you always know where you stand.",
   "start_url": "/policies",
   "display": "standalone",
   "background_color": "#f1f5f9",

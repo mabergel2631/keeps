@@ -71,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
         >
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>{APP_NAME}</div>
-          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>Coverage Intelligence</div>
+          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>Intelligent Insurance</div>
         </div>
 
         <nav style={{ flex: 1, padding: '12px 8px' }}>

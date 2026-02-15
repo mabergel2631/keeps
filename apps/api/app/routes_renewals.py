@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .auth import get_current_user
 from .db import get_db
+from .email_renewals import send_renewal_reminders
 from .models import Policy, User
 
 router = APIRouter(prefix="/renewals", tags=["renewals"])
@@ -37,3 +38,9 @@ def upcoming_renewals(days: int = Query(default=30, ge=1, le=365), db: Session =
         }
         for p in rows
     ]
+
+
+@router.post("/send-reminders")
+async def trigger_renewal_reminders(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    result = await send_renewal_reminders(db)
+    return result

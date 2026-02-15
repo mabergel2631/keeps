@@ -127,9 +127,11 @@ export default function PrivacyPage() {
         <p>
           When you upload a document, we use artificial intelligence to extract key information
           (carrier, policy number, coverage amounts, etc.) so you don&apos;t have to type it manually.
-          This processing is performed solely to provide the Service to you. Extracted data is stored
-          in your account and is not used to train AI models, build datasets, or for any purpose
-          other than serving you.
+          We also use AI to analyze your coverage — including scoring your protection level, detecting
+          gaps in your insurance, identifying policy changes between terms, and generating renewal
+          alerts. All of this processing is performed solely to provide the Service to you. Your data
+          is stored in your account and is not used to train AI models, build datasets, or for any
+          purpose other than serving you.
         </p>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, margin: '40px 0 12px', color: 'var(--color-text)' }}>
