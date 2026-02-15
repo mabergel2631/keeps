@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
       {/* Navigation Header */}
-      <header style={{
+      <header className="landing-header" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -35,7 +35,7 @@ export default function Home() {
         >
           {APP_NAME}
         </div>
-        <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+        <nav className="landing-nav-links">
           <span onClick={() => scrollTo('how-it-works')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>How it works</span>
           <span onClick={() => scrollTo('features')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Features</span>
           <span onClick={() => scrollTo('security')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Security</span>
