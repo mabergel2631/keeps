@@ -74,7 +74,7 @@ export default function Home() {
             Intelligent insurance that actually works for you.
           </p>
           <p style={{ fontSize: 17, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.7, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
-            {APP_NAME} analyzes every policy you own — scoring your protection, detecting coverage gaps, tracking renewal deadlines, and explaining what changed. So you always know exactly where you stand.
+            {APP_NAME} analyzes every policy you own — detecting coverage gaps, flagging duplicate or overlapping coverage, tracking renewal deadlines, and explaining what changed. So you always know exactly where you stand.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
             <button
@@ -127,7 +127,7 @@ export default function Home() {
           </p>
           <div style={{ textAlign: 'left', maxWidth: 420, margin: '0 auto 32px', fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 2.2 }}>
             <div>&bull; Where are the gaps in my coverage?</div>
-            <div>&bull; How strong is my overall protection?</div>
+            <div>&bull; Am I paying for duplicate or overlapping coverage?</div>
             <div>&bull; When do my policies renew — and am I ready?</div>
             <div>&bull; What changed since last year?</div>
             <div>&bull; What should I do next?</div>
@@ -156,7 +156,7 @@ export default function Home() {
               <div style={{ fontSize: 40, marginBottom: 16 }}>2</div>
               <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>{APP_NAME} analyzes everything</h3>
               <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Your coverage is scored, gaps are identified, renewals are tracked, and policy changes are detected and explained — all automatically.
+                Your coverage is analyzed, gaps and overlaps are identified, renewals are tracked, and policy changes are detected and explained — all automatically.
               </p>
             </div>
             <div className="card" style={{ padding: 32, textAlign: 'center' }}>
@@ -182,8 +182,8 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, textAlign: 'left' }}>
             {[
               { icon: '🤖', title: 'AI-powered extraction', desc: `Upload a document and ${APP_NAME} reads it — extracting carrier, limits, deductibles, renewal dates, and more automatically.` },
-              { icon: '💯', title: 'Protection Score', desc: 'A 0\u2013100 score across your entire portfolio so you know how strong your coverage is at a glance.' },
-              { icon: '🔍', title: 'Gap detection', desc: 'Identifies missing coverage types and inadequate limits before they become problems.' },
+              { icon: '🛡️', title: 'Coverage health', desc: 'At-a-glance red, yellow, and green status for every policy so you know exactly what needs attention.' },
+              { icon: '🔍', title: 'Gap & overlap detection', desc: 'Finds missing coverage, inadequate limits, and duplicate policies that waste money.' },
               { icon: '🔔', title: 'Renewal tracking', desc: 'Automatic alerts before every deadline so you never miss a renewal or lapse in coverage.' },
               { icon: '📊', title: 'Change detection', desc: `When a policy renews, ${APP_NAME} spots what changed and explains it in plain language.` },
               { icon: '🚨', title: 'Emergency-ready sharing', desc: 'Secure access for loved ones, caregivers, or attorneys — so critical info is available when it matters most.' },
@@ -223,7 +223,7 @@ export default function Home() {
               <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-primary)' }}>The {APP_NAME} way</h3>
               <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text)', lineHeight: 2.2, listStyleType: "'\\2713  '" }}>
                 <li>Upload once — AI reads and organizes everything</li>
-                <li>Every policy scored, analyzed, and monitored</li>
+                <li>Every policy analyzed, monitored, and status-checked</li>
                 <li>Gaps and changes surfaced automatically</li>
                 <li>Renewal alerts before every deadline</li>
                 <li>Know exactly where you stand at a glance</li>
@@ -266,10 +266,10 @@ export default function Home() {
             Work with an advisor? Even better.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 24px', lineHeight: 1.8 }}>
-            Share access with your agent, attorney, or financial advisor. They see your coverage intelligence and can help you act on it — scores, gaps, renewals, and recommendations all in one place.
+            Share access with your agent, attorney, or financial advisor. They see your coverage intelligence and can help you act on it — status, gaps, renewals, and recommendations all in one place.
           </p>
           <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.7, fontStyle: 'italic' }}>
-            Advisors: your clients can invite you. You&apos;ll see their scores, gaps, and renewals in one dashboard.
+            Advisors: your clients can invite you. You&apos;ll see their coverage status, gaps, and renewals in one dashboard.
           </p>
         </div>
       </section>
