@@ -1,12 +1,28 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background with rounded corners for app icon -->
-  <rect width="512" height="512" rx="85" fill="#1e3a5f"/>
+  <defs>
+    <linearGradient id="gTeal" x1="24" y1="21" x2="162" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5CBDB7"/>
+      <stop offset="1" stop-color="#3FA7A3"/>
+    </linearGradient>
+    <linearGradient id="gSlate" x1="33" y1="78" x2="168" y2="174" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#516FA8"/>
+      <stop offset="1" stop-color="#2E4F87"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Shield shape -->
-  <path d="M 256 75 L 394 150 L 394 267 C 394 373 256 458 256 458 C 256 458 118 373 118 267 L 118 150 Z"
-        fill="none" stroke="white" stroke-width="10" stroke-linejoin="round"/>
+  <!-- Background -->
+  <rect width="512" height="512" rx="85" fill="#0f1f33"/>
 
-  <!-- C letter -->
-  <text x="256" y="315" font-family="system-ui, -apple-system, sans-serif" font-size="192" font-weight="700"
-        fill="white" text-anchor="middle" dominant-baseline="middle">C</text>
+  <!-- Mark (centered at 512: translate(96,96) scale(2.5)) -->
+  <g transform="translate(96,96) scale(2.5)">
+    <path d="M36 18H94C102.837 18 110 25.1634 110 34V46H96V36C96 33.7909 94.2091 32 92 32H38C35.7909 32 34 33.7909 34 36V92C34 94.2091 35.7909 96 38 96H50V110H36C27.1634 110 20 102.837 20 94V34C20 25.1634 27.1634 18 36 18Z"
+          fill="url(#gTeal)"/>
+    <path d="M78 110H34C25.1634 110 18 102.837 18 94V78H32V92C32 94.2091 33.7909 96 36 96H92C94.2091 96 96 94.2091 96 92V36C96 33.7909 94.2091 32 92 32H78V18H94C102.837 18 110 25.1634 110 34V94C110 102.837 102.837 110 94 110H78Z"
+          fill="url(#gSlate)"/>
+    <path d="M44 36H84C90.6274 36 96 41.3726 96 48V58H86V50C86 47.7909 84.2091 46 82 46H46C43.7909 46 42 47.7909 42 50V82C42 84.2091 43.7909 86 46 86H58V96H48C41.3726 96 36 90.6274 36 84V48C36 41.3726 41.3726 36 48 36H44Z"
+          fill="#2B3E6A" opacity="0.55"/>
+    <rect x="92" y="36" width="18" height="6" fill="#DCE3EE" opacity="0.70"/>
+    <rect x="92" y="46" width="18" height="6" fill="#DCE3EE" opacity="0.45"/>
+    <rect x="20" y="92" width="18" height="18" fill="#2E4F87" opacity="0.85"/>
+  </g>
 </svg>
