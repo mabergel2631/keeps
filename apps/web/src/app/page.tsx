@@ -1,33 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
-import { APP_NAME, APP_TAGLINE } from './config';
+import { APP_NAME, APP_TAGLINE, APP_CONTACT_EMAIL } from './config';
 
 export default function Home() {
   const { token } = useAuth();
   const router = useRouter();
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const ctaAction = () => router.push(token ? '/policies' : '/login');
+  const ctaLabel = token ? 'View My Coverage' : 'Get Started Free';
+
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
-      {/* Navigation Header */}
+      {/* ═══════════════════════════════════════════════════════════════
+          NAVIGATION
+      ═══════════════════════════════════════════════════════════════ */}
       <header className="landing-header" style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(8px)',
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
         borderBottom: '1px solid var(--color-border)',
-        padding: '12px 24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <div
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -37,282 +36,442 @@ export default function Home() {
         </div>
         <nav className="landing-nav-links">
           <span onClick={() => scrollTo('how-it-works')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>How it works</span>
-          <span onClick={() => scrollTo('features')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Features</span>
           <span onClick={() => scrollTo('security')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Security</span>
-          <button
-            onClick={() => router.push(token ? '/policies' : '/login')}
-            style={{
-              padding: '8px 20px',
-              fontSize: 14,
-              fontWeight: 600,
-              backgroundColor: 'var(--color-primary)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              cursor: 'pointer',
-            }}
-          >
+          <span onClick={() => scrollTo('faq')} style={{ fontSize: 14, color: 'var(--color-text-secondary)', cursor: 'pointer' }}>FAQ</span>
+          <button onClick={ctaAction} style={{
+            padding: '8px 20px', fontSize: 14, fontWeight: 600,
+            backgroundColor: 'var(--color-primary)', color: '#fff',
+            border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+          }}>
             {token ? 'My Coverage' : 'Sign in'}
           </button>
         </nav>
       </header>
 
-      {/* 1. HERO SECTION */}
+      {/* ═══════════════════════════════════════════════════════════════
+          1. HERO
+      ═══════════════════════════════════════════════════════════════ */}
       <section style={{
-        paddingTop: 120,
-        paddingBottom: 60,
-        paddingLeft: 24,
-        paddingRight: 24,
+        paddingTop: 120, paddingBottom: 60, paddingLeft: 24, paddingRight: 24,
         background: 'linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 50%, var(--color-primary-light) 100%)',
         color: '#fff',
       }}>
         <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontSize: 44, fontWeight: 700, margin: '0 0 20px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-            Your AI insurance analyst — always watching, always ready.
+            Your coverage, finally clear.
           </h1>
-          <p style={{ fontSize: 18, opacity: 0.95, margin: '0 0 8px', lineHeight: 1.7, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto', fontWeight: 600 }}>
-            Intelligent insurance that actually works for you.
+          <p style={{ fontSize: 18, opacity: 0.95, margin: '0 0 8px', lineHeight: 1.7, maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', fontWeight: 600 }}>
+            {APP_NAME} reads your policies, tracks what changed, finds what&apos;s missing, and keeps the right people informed — so you always know where you stand.
           </p>
-          <p style={{ fontSize: 17, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.7, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto' }}>
-            {APP_NAME} analyzes every policy you own — detecting coverage gaps, flagging duplicate or overlapping coverage, tracking renewal deadlines, and explaining what changed. So you always know exactly where you stand.
+          <p style={{ fontSize: 15, opacity: 0.8, margin: '0 0 32px', lineHeight: 1.7, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>
+            Private. Independent. No credit card required.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-            <button
-              onClick={() => router.push(token ? '/policies' : '/login')}
-              style={{
-                padding: '14px 32px',
-                fontSize: 16,
-                fontWeight: 600,
-                backgroundColor: 'var(--color-accent)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'pointer',
-              }}
-            >
-              {token ? 'View My Coverage' : 'Get Started'}
+            <button onClick={ctaAction} style={{
+              padding: '14px 32px', fontSize: 16, fontWeight: 600,
+              backgroundColor: 'var(--color-accent)', color: '#fff',
+              border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+            }}>
+              {ctaLabel}
             </button>
-            <button
-              onClick={() => scrollTo('how-it-works')}
-              style={{
-                padding: '14px 32px',
-                fontSize: 16,
-                fontWeight: 600,
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'pointer',
-              }}
-            >
+            <button onClick={() => scrollTo('how-it-works')} style={{
+              padding: '14px 32px', fontSize: 16, fontWeight: 600,
+              backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff',
+              border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+            }}>
               See how it works
             </button>
           </div>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', fontSize: 13, opacity: 0.8 }}>
-            <span>AI-powered analysis</span>
+          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', fontSize: 13, opacity: 0.75 }}>
+            <span>Your data stays yours</span>
             <span>Encrypted &amp; private</span>
-            <span>Real-time monitoring</span>
+            <span>Setup in ~10 minutes</span>
           </div>
         </div>
       </section>
 
-      {/* 2. PROBLEM SECTION */}
+      {/* ═══════════════════════════════════════════════════════════════
+          2. THE SILENCE PROBLEM
+      ═══════════════════════════════════════════════════════════════ */}
       <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 24px', color: 'var(--color-text)' }}>
-            Most people have no idea if their coverage actually protects them.
+          <h2 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 24px', color: 'var(--color-text)', lineHeight: 1.3 }}>
+            The problem with insurance isn&apos;t the cost.{' '}
+            <span style={{ color: 'var(--color-text-secondary)' }}>It&apos;s the silence.</span>
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.8, margin: '0 0 32px' }}>
-            Policies are scattered across carriers, emails, portals, and PDFs. Without an analyst watching everything, the important questions go unanswered:
+            Nothing tells you when a limit is too low. Nothing alerts you when a renewal quietly drops coverage. Nothing warns you that your umbrella doesn&apos;t cover what you think it does.
           </p>
-          <div style={{ textAlign: 'left', maxWidth: 420, margin: '0 auto 32px', fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 2.2 }}>
-            <div>&bull; Where are the gaps in my coverage?</div>
-            <div>&bull; Am I paying for duplicate or overlapping coverage?</div>
-            <div>&bull; When do my policies renew — and am I ready?</div>
-            <div>&bull; What changed since last year?</div>
-            <div>&bull; What should I do next?</div>
-          </div>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.8, margin: '0 0 32px' }}>
+            Most people find out they have a gap when a claim gets denied.
+          </p>
           <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-primary)', margin: 0 }}>
-            {APP_NAME} watches everything and tells you exactly what needs attention.
+            {APP_NAME} breaks the silence.
           </p>
         </div>
       </section>
 
-      {/* 3. HOW IT WORKS */}
-      <section id="how-it-works" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+      {/* ═══════════════════════════════════════════════════════════════
+          3. OWN YOUR COVERAGE
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', textAlign: 'center', color: 'var(--color-text)' }}>
+            One place for everything you&apos;re covered for
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', textAlign: 'center', lineHeight: 1.7, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+            Insurance information is fragmented across carrier portals, emails, and files you rarely revisit. {APP_NAME} gives you a single, structured view you control.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+            {[
+              { title: 'Structured policy data', desc: 'Every policy organized with limits, deductibles, renewal dates, and contacts — not buried in PDFs.' },
+              { title: 'Coverage intelligence', desc: 'Gaps, overlaps, and changes surfaced automatically. Not just storage — understanding.' },
+              { title: 'Controlled access', desc: 'You decide who sees what. Share with family, advisors, or emergency contacts on your terms.' },
+              { title: 'Always current', desc: 'Renewal tracking, status monitoring, and change detection keep your view up to date.' },
+            ].map(item => (
+              <div key={item.title} className="card" style={{ padding: 24 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{item.title}</h3>
+                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          4. HOW IT WORKS
+      ═══════════════════════════════════════════════════════════════ */}
+      <section id="how-it-works" style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
             How it works
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 32 }}>
             <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>1</div>
+              <div style={{ fontSize: 40, marginBottom: 16, fontWeight: 700, color: 'var(--color-primary)', opacity: 0.3 }}>1</div>
               <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>Add your policies</h3>
               <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Upload PDFs, scans, or photos. {APP_NAME}&apos;s AI extracts every key detail automatically — carrier, limits, deductibles, renewal dates, and more.
+                Upload documents or forward emails. {APP_NAME} reads them and extracts the key details automatically — carrier, limits, deductibles, renewal dates, and more.
               </p>
             </div>
             <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>2</div>
-              <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>{APP_NAME} analyzes everything</h3>
+              <div style={{ fontSize: 40, marginBottom: 16, fontWeight: 700, color: 'var(--color-primary)', opacity: 0.3 }}>2</div>
+              <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>Your coverage becomes clear</h3>
               <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Your coverage is analyzed, gaps and overlaps are identified, renewals are tracked, and policy changes are detected and explained — all automatically.
+                Gaps are identified, overlaps are flagged, renewals are tracked, and policy changes are detected and explained — all automatically.
               </p>
             </div>
             <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>3</div>
-              <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>Stay protected effortlessly</h3>
+              <div style={{ fontSize: 40, marginBottom: 16, fontWeight: 700, color: 'var(--color-primary)', opacity: 0.3 }}>3</div>
+              <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 12px', color: 'var(--color-text)' }}>Stay continuously ready</h3>
               <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Get proactive alerts before renewals, when gaps appear, and when something changes. {APP_NAME} keeps watching so you don&apos;t have to.
+                Proactive alerts before renewals, when gaps appear, and when something changes. Share safely with anyone who needs access.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. FEATURES — What Covrabl does */}
-      <section id="features" style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+      {/* ═══════════════════════════════════════════════════════════════
+          5. WHAT YOU'LL KNOW
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
-            What {APP_NAME} does
+            After 10 minutes with {APP_NAME}, you&apos;ll know:
           </h2>
-          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', lineHeight: 1.7 }}>
-            {APP_NAME} doesn&apos;t just store your policies — it continuously analyzes them to keep you protected.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, textAlign: 'left' }}>
+          <div style={{ textAlign: 'left', maxWidth: 520, margin: '32px auto 0', fontSize: 16, lineHeight: 2.4 }}>
             {[
-              { icon: '🤖', title: 'AI-powered extraction', desc: `Upload a document and ${APP_NAME} reads it — extracting carrier, limits, deductibles, renewal dates, and more automatically.` },
-              { icon: '🛡️', title: 'Coverage health', desc: 'At-a-glance red, yellow, and green status for every policy so you know exactly what needs attention.' },
-              { icon: '🔍', title: 'Gap & overlap detection', desc: 'Finds missing coverage, inadequate limits, and duplicate policies that waste money.' },
-              { icon: '🔔', title: 'Renewal tracking', desc: 'Automatic alerts before every deadline so you never miss a renewal or lapse in coverage.' },
-              { icon: '📊', title: 'Change detection', desc: `When a policy renews, ${APP_NAME} spots what changed and explains it in plain language.` },
-              { icon: '🚨', title: 'Emergency-ready sharing', desc: 'Secure access for loved ones, caregivers, or attorneys — so critical info is available when it matters most.' },
-            ].map(f => (
-              <div key={f.title} className="card" style={{ padding: 24 }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{f.title}</h3>
-                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
+              'Exactly what every policy covers — and what it doesn\'t',
+              'When every renewal is coming and what changed last time',
+              'Where the gaps in your coverage are',
+              'Who to call for every policy — claims, agent, broker',
+              'That the right people can access your info in an emergency',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 18, lineHeight: '2.4', flexShrink: 0 }}>&check;</span>
+                <span style={{ color: 'var(--color-text)' }}>{item}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 6. COMPARISON */}
+      {/* ═══════════════════════════════════════════════════════════════
+          6. EMERGENCY SHARING (ELEVATED)
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
+            Be ready when it matters
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.8, margin: '0 0 32px' }}>
+            If something happens, the right people should know what coverage exists. No searching through email. No calling carriers on hold. Just access when it matters most.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, textAlign: 'left' }}>
+            {[
+              { who: 'Family members', what: 'Spouse, adult children, or parents can see what\'s covered without needing your passwords.' },
+              { who: 'Caregivers', what: 'Aging parents\' coverage accessible to the people helping manage their lives.' },
+              { who: 'Advisors & attorneys', what: 'Share your full coverage picture with professionals who need it — on your terms.' },
+              { who: 'Emergency contacts', what: 'A secure, PIN-protected card with essential policy info — accessible from any phone.' },
+            ].map(item => (
+              <div key={item.who} style={{ padding: 20, background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>{item.who}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{item.what}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          7. WHO IT'S FOR
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 40px', textAlign: 'center', color: 'var(--color-text)' }}>
+            Built for people who take coverage seriously
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+            {[
+              { title: 'Homeowners & families', desc: 'Auto, home, umbrella, life, health — multiple policies across multiple carriers, finally organized in one place.' },
+              { title: 'Small business owners', desc: 'GL, professional liability, cyber, workers\' comp, COIs — track every business policy and know where the gaps are.' },
+              { title: 'Property owners', desc: 'Multiple dwellings, multiple policies, multiple renewal dates. See everything at a glance.' },
+              { title: 'Family organizers & caregivers', desc: 'Managing insurance for aging parents or your household. Know what exists and share access with the people who need it.' },
+            ].map(p => (
+              <div key={p.title} className="card" style={{ padding: 24 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{p.title}</h3>
+                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          8. COMPARISON
+      ═══════════════════════════════════════════════════════════════ */}
       <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', textAlign: 'center', color: 'var(--color-text)' }}>
-            Insurance management has barely changed. Until now.
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
+            Insurance management hasn&apos;t changed in 20 years.
           </h2>
-          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 48px', textAlign: 'center', lineHeight: 1.7 }}>
-            Most people still manage insurance the same way they did 20 years ago.
-          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
             <div className="card" style={{ padding: 32, backgroundColor: '#fafafa' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-text-muted)' }}>The old way</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-text-muted)' }}>Without {APP_NAME}</h3>
               <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text-secondary)', lineHeight: 2.2, listStyleType: "'\\2717  '" }}>
-                <li>Paper policies stuffed in a drawer</li>
-                <li>PDFs buried across email threads</li>
-                <li>Calling your agent and waiting on hold</li>
-                <li>No idea what&apos;s actually covered</li>
-                <li>Finding out about a gap when a claim is denied</li>
-                <li>Renewals missed because no one was tracking</li>
+                <li>Policies in drawers, emails, and portals you rarely check</li>
+                <li>No idea what&apos;s actually covered until you need it</li>
+                <li>Renewals pass without review</li>
+                <li>Gaps discovered when a claim is denied</li>
+                <li>Calling your agent and waiting on hold for basic answers</li>
+                <li>Family has no access if something happens to you</li>
               </ul>
             </div>
             <div className="card" style={{ padding: 32, borderColor: 'var(--color-primary)', borderWidth: 2 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-primary)' }}>The {APP_NAME} way</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-primary)' }}>With {APP_NAME}</h3>
               <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text)', lineHeight: 2.2, listStyleType: "'\\2713  '" }}>
-                <li>Upload once — AI reads and organizes everything</li>
-                <li>Every policy analyzed, monitored, and status-checked</li>
-                <li>Gaps and changes surfaced automatically</li>
+                <li>Every policy structured and searchable in one place</li>
+                <li>Limits, deductibles, and gaps visible at a glance</li>
                 <li>Renewal alerts before every deadline</li>
-                <li>Know exactly where you stand at a glance</li>
-                <li>Emergency access for the people who need it</li>
+                <li>Changes detected and explained in plain language</li>
+                <li>Instant answers — no phone calls required</li>
+                <li>Secure emergency access for the people who need it</li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. SECURITY */}
-      <section id="security" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+      {/* ═══════════════════════════════════════════════════════════════
+          9. WHAT COVRABL IS NOT (TRUST BUILDER)
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
-            Security built for sensitive documents
+            {APP_NAME} is built for clarity — not selling.
           </h2>
-          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', lineHeight: 1.7 }}>
-            AI analysis of your insurance requires trust. {APP_NAME} treats your data accordingly.
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.8, margin: '0 0 32px' }}>
+            We organize and explain your coverage so you can make better decisions. That&apos;s it.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, textAlign: 'left' }}>
+          <div style={{ textAlign: 'left', maxWidth: 440, margin: '0 auto', fontSize: 15, lineHeight: 2.4 }}>
             {[
-              { title: 'Encryption', desc: 'Data encrypted in transit and at rest.' },
-              { title: 'Permissioned sharing', desc: 'Control exactly who sees what.' },
-              { title: 'Data ownership', desc: 'Your data stays yours.' },
-              { title: 'Privacy-first design', desc: 'Built with privacy as a core principle.' },
-            ].map(s => (
-              <div key={s.title} style={{ padding: 16 }}>
-                <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px', color: 'var(--color-text)' }}>{s.title}</h4>
-                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>{s.desc}</p>
+              { bold: 'Not an insurance company.', rest: ' We don\'t sell policies or take commissions.' },
+              { bold: 'Not a lead generator.', rest: ' Your info is never sold to agents or carriers.' },
+              { bold: 'Not an advertising platform.', rest: ' No ads. No tracking. No data deals.' },
+              { bold: 'Not a replacement for your agent.', rest: ' We help you understand what you have — so those conversations are better.' },
+            ].map((item, i) => (
+              <div key={i} style={{ color: 'var(--color-text)' }}>
+                <strong>{item.bold}</strong>
+                <span style={{ color: 'var(--color-text-secondary)' }}>{item.rest}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 8. FOR ADVISORS */}
-      <section id="advisors" style={{ padding: '80px 24px', background: '#fff' }}>
+      {/* ═══════════════════════════════════════════════════════════════
+          10. SECURITY
+      ═══════════════════════════════════════════════════════════════ */}
+      <section id="security" style={{ padding: '80px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
+            Your data is sensitive. We treat it that way.
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', lineHeight: 1.7 }}>
+            Insurance documents contain personal information. {APP_NAME} is built with security as a core requirement, not an afterthought.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, textAlign: 'left' }}>
+            {[
+              { title: 'Encrypted everywhere', desc: 'All data encrypted in transit (TLS) and at rest. Your documents are stored securely.' },
+              { title: 'You control access', desc: 'Granular sharing permissions. You decide exactly who sees what — and revoke anytime.' },
+              { title: 'Your data stays yours', desc: 'Never sold. Never shared with carriers or advertisers. Export or delete everything anytime.' },
+              { title: 'Audit trail', desc: 'Every action is logged. You can see exactly what happened and when.' },
+            ].map(s => (
+              <div key={s.title} style={{ padding: 16 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px', color: 'var(--color-text)' }}>{s.title}</h4>
+                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          11. FAQ
+      ═══════════════════════════════════════════════════════════════ */}
+      <section id="faq" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 40px', textAlign: 'center', color: 'var(--color-text)' }}>
+            Frequently asked questions
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {[
+              {
+                q: 'Is my data safe?',
+                a: `Yes. All data is encrypted in transit and at rest. Your password is hashed with bcrypt — we can't see it. ${APP_NAME} is built with the same security standards used for financial applications.`,
+              },
+              {
+                q: 'Do you sell my information to insurance companies?',
+                a: `No. Never. Your individual policy data is never shared with carriers, agents, advertisers, or any third party. ${APP_NAME} is paid for by users, not by selling data.`,
+              },
+              {
+                q: 'Can insurance companies see that I use Covrabl?',
+                a: `No. ${APP_NAME} is completely independent. We have no relationship with any insurance carrier. Your account is private to you.`,
+              },
+              {
+                q: 'How does the document reading work?',
+                a: `Upload a PDF, scan, or photo of any policy document. ${APP_NAME} uses AI to extract the key details — carrier, limits, deductibles, renewal dates, contacts, and more. You review everything before it's saved.`,
+              },
+              {
+                q: 'What if the extraction gets something wrong?',
+                a: 'You always review extracted data before it\'s saved, and you can edit any field at any time. The AI handles the tedious data entry — you stay in control of the final result.',
+              },
+              {
+                q: 'Can I share my coverage info with my agent or advisor?',
+                a: 'Yes. You can invite advisors, agents, attorneys, or family members to view your coverage. You control permissions and can revoke access anytime.',
+              },
+              {
+                q: 'Can I export or delete all my data?',
+                a: 'Yes to both, anytime. Download your data as CSV or permanently delete your entire account. No lock-in, no data hostage.',
+              },
+              {
+                q: 'Does this replace my insurance agent?',
+                a: `No. ${APP_NAME} helps you understand what you have so your conversations with your agent are better. Think of it as preparation, not replacement.`,
+              },
+              {
+                q: 'What types of insurance policies work with Covrabl?',
+                a: 'All of them. Auto, home, renters, life, health, disability, umbrella, general liability, professional liability, cyber, workers\' comp, commercial property, and more. Personal and business.',
+              },
+              {
+                q: 'How long does setup take?',
+                a: 'About 10 minutes for most people. Upload your documents, review the extracted details, and you\'re done. You can always add more policies later.',
+              },
+            ].map((faq, i) => (
+              <div key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{
+                    width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '20px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)', paddingRight: 16 }}>{faq.q}</span>
+                  <span style={{
+                    fontSize: 20, color: 'var(--color-text-muted)', flexShrink: 0, lineHeight: 1,
+                    transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s',
+                  }}>+</span>
+                </button>
+                {openFaq === i && (
+                  <div style={{ padding: '0 0 20px', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          12. FOR ADVISORS
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
             Work with an advisor? Even better.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 24px', lineHeight: 1.8 }}>
-            Share access with your agent, attorney, or financial advisor. They see your coverage intelligence and can help you act on it — status, gaps, renewals, and recommendations all in one place.
+            Share your {APP_NAME} dashboard with your agent, broker, or attorney. They see your full coverage picture — gaps, renewals, and status — without you having to explain anything on the phone.
           </p>
           <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.7, fontStyle: 'italic' }}>
-            Advisors: your clients can invite you. You&apos;ll see their coverage status, gaps, and renewals in one dashboard.
+            Advisors: your clients can invite you. One dashboard, every client&apos;s coverage, organized.
           </p>
         </div>
       </section>
 
-      {/* 9. FINAL CTA */}
+      {/* ═══════════════════════════════════════════════════════════════
+          13. FINAL CTA
+      ═══════════════════════════════════════════════════════════════ */}
       <section style={{
         padding: '80px 24px',
         background: 'linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%)',
-        color: '#fff',
-        textAlign: 'center',
+        color: '#fff', textAlign: 'center',
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <h2 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 16px' }}>
-            Let AI handle the complexity.
+            Know where you stand.
           </h2>
           <p style={{ fontSize: 18, opacity: 0.9, margin: '0 0 32px' }}>
-            You just stay protected.
+            Your coverage is too important to guess about.
           </p>
-          <button
-            onClick={() => router.push(token ? '/policies' : '/login')}
-            style={{
-              padding: '16px 40px',
-              fontSize: 18,
-              fontWeight: 600,
-              backgroundColor: 'var(--color-accent)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              cursor: 'pointer',
-            }}
-          >
-            {token ? 'View My Coverage' : 'Get Started'}
+          <button onClick={ctaAction} style={{
+            padding: '16px 40px', fontSize: 18, fontWeight: 600,
+            backgroundColor: 'var(--color-accent)', color: '#fff',
+            border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+          }}>
+            {ctaLabel}
           </button>
+          <div style={{ marginTop: 16, fontSize: 13, opacity: 0.7 }}>
+            No credit card required
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ padding: '24px', textAlign: 'center', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)', fontSize: 13 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12 }}>
-          <span onClick={() => router.push('/privacy')} style={{ cursor: 'pointer' }}>Privacy</span>
-          <span onClick={() => router.push('/terms')} style={{ cursor: 'pointer' }}>Terms</span>
+      {/* ═══════════════════════════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════════════════════════ */}
+      <footer style={{ padding: '32px 24px', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)', fontSize: 13 }}>
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
+            <span onClick={() => router.push('/privacy')} style={{ cursor: 'pointer' }}>Privacy</span>
+            <span onClick={() => router.push('/terms')} style={{ cursor: 'pointer' }}>Terms</span>
+            <a href={`mailto:${APP_CONTACT_EMAIL}`} style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>{APP_CONTACT_EMAIL}</a>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            {APP_NAME} — {APP_TAGLINE}
+          </div>
         </div>
-        {APP_NAME} — {APP_TAGLINE}
       </footer>
     </div>
   );
