@@ -6,6 +6,14 @@ import { useAuth } from '../../../lib/auth';
 import { profileApi, UserProfile, ProfileContact, ProfileContactCreate } from '../../../lib/api';
 import { useToast } from '../components/Toast';
 
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+}
+
 const CONTEXT_FLAGS: { key: keyof UserProfile; label: string; help: string }[] = [
   { key: 'is_homeowner', label: 'I own a home', help: 'Helps identify homeowners insurance gaps' },
   { key: 'is_renter', label: 'I rent', help: 'Helps identify renters insurance gaps' },
@@ -247,7 +255,7 @@ export default function ProfilePage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <InfoField label="Full Name" value={profile?.full_name} />
-              <InfoField label="Phone" value={profile?.phone} />
+              <InfoField label="Phone" value={profile?.phone ? formatPhone(profile.phone) : undefined} />
               <InfoField label="Address" value={[profile?.address_street, [profile?.address_city, profile?.address_state, profile?.address_zip].filter(Boolean).join(' ')].filter(Boolean).join(', ') || undefined} span={2} />
             </div>
           )}
@@ -411,13 +419,21 @@ export default function ProfilePage() {
 function FormField({ label, value, onChange, placeholder, type = 'text' }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (type === 'tel') {
+      onChange(formatPhone(e.target.value));
+    } else {
+      onChange(e.target.value);
+    }
+  };
+
   return (
     <div>
       <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4, color: 'var(--color-text-secondary)' }}>{label}</label>
       <input
         type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
+        value={type === 'tel' ? formatPhone(value) : value}
+        onChange={handleChange}
         placeholder={placeholder}
         className="form-input"
         style={{ width: '100%' }}
@@ -456,7 +472,7 @@ function ContactCard({ contact, onEdit, onDelete }: {
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
           {contact.contact_type === 'emergency' && contact.relationship && <span>{contact.relationship} &middot; </span>}
           {contact.contact_type === 'broker' && contact.company && <span>{contact.company} &middot; </span>}
-          {contact.phone && <span>{contact.phone}</span>}
+          {contact.phone && <span>{formatPhone(contact.phone)}</span>}
           {contact.phone && contact.email && <span> &middot; </span>}
           {contact.email && <span>{contact.email}</span>}
         </div>
