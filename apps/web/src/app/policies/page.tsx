@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { policiesApi, renewalsApi, remindersApi, premiumsApi, sharingApi, documentsApi, gapsApi, scoresApi, inboundApi, exposuresApi, Policy, PolicyCreate, RenewalItem, SmartAlert, SharedPolicy, PendingShare, CoverageGap, CoverageSummary, CoverageScoresResult, InboundAddress, PolicyDraftData, Exposure, ExposureCreate } from '../../../lib/api';
+import { policiesApi, renewalsApi, remindersApi, premiumsApi, sharingApi, documentsApi, gapsApi, inboundApi, exposuresApi, Policy, PolicyCreate, RenewalItem, SmartAlert, SharedPolicy, PendingShare, CoverageGap, CoverageSummary, InboundAddress, PolicyDraftData, Exposure, ExposureCreate } from '../../../lib/api';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { APP_NAME } from '../config';
@@ -47,7 +47,6 @@ export default function PoliciesPage() {
   const [smartAlerts, setSmartAlerts] = useState<SmartAlert[]>([]);
   const [coverageGaps, setCoverageGaps] = useState<CoverageGap[]>([]);
   const [coverageSummary, setCoverageSummary] = useState<CoverageSummary | null>(null);
-  const [coverageScores, setCoverageScores] = useState<CoverageScoresResult | null>(null);
   const [inboundAddress, setInboundAddress] = useState<InboundAddress | null>(null);
   const [pendingDrafts, setPendingDrafts] = useState<PolicyDraftData[]>([]);
   const [showDraftModal, setShowDraftModal] = useState<PolicyDraftData | null>(null);
@@ -83,7 +82,7 @@ export default function PoliciesPage() {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [pols, rens, spend, shared, pending, alerts, gapsResult, scoresResult, addressResult, draftsResult, exps] = await Promise.all([
+      const [pols, rens, spend, shared, pending, alerts, gapsResult, addressResult, draftsResult, exps] = await Promise.all([
         policiesApi.list(),
         renewalsApi.upcoming(90),
         premiumsApi.annualSpend(),
@@ -91,7 +90,6 @@ export default function PoliciesPage() {
         sharingApi.pending(),
         remindersApi.smart().catch(() => []),
         gapsApi.analyze().catch(() => ({ gaps: [], summary: null, policy_count: 0 })),
-        scoresApi.get().catch(() => null),
         inboundApi.getAddress().catch(() => ({ address: null })),
         inboundApi.listDrafts('pending').catch(() => ({ items: [], total: 0 })),
         exposuresApi.list().catch(() => []),
@@ -104,7 +102,6 @@ export default function PoliciesPage() {
       setSmartAlerts(Array.isArray(alerts) ? alerts : []);
       setCoverageGaps(gapsResult.gaps || []);
       setCoverageSummary(gapsResult.summary || null);
-      setCoverageScores(scoresResult);
       setInboundAddress(addressResult?.address || null);
       setPendingDrafts(draftsResult?.items || []);
       setExposures(Array.isArray(exps) ? exps : []);
@@ -548,81 +545,6 @@ export default function PoliciesPage() {
           </div>
         )}
 
-        {/* Coverage Score Card */}
-        {!loading && coverageScores && coverageScores.overall.score > 0 && (
-          <section style={{ marginBottom: 40 }}>
-            <div style={{
-              padding: 24,
-              backgroundColor: '#fff',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                <div>
-                  <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px' }}>
-                    Protection Score
-                  </h2>
-                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
-                    How well protected are you?
-                  </p>
-                </div>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  backgroundColor: coverageScores.overall.score >= 70 ? '#dcfce7' : coverageScores.overall.score >= 40 ? '#fef3c7' : '#fee2e2',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                }}>
-                  <span style={{
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: coverageScores.overall.score >= 70 ? '#166534' : coverageScores.overall.score >= 40 ? '#92400e' : '#991b1b',
-                  }}>
-                    {coverageScores.overall.score}
-                  </span>
-                  <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>/ 100</span>
-                </div>
-              </div>
-
-              {/* Category bars */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {Object.entries(coverageScores.categories).filter(([_, data]) => data.score > 0).map(([cat, data]) => (
-                  <div key={cat}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{cat}</span>
-                      <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{data.score}%</span>
-                    </div>
-                    <div style={{ height: 8, backgroundColor: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{
-                        width: `${data.score}%`,
-                        height: '100%',
-                        backgroundColor: data.score >= 70 ? '#22c55e' : data.score >= 40 ? '#f59e0b' : '#ef4444',
-                        borderRadius: 4,
-                        transition: 'width 0.3s',
-                      }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Insights */}
-              {coverageScores.overall.insights.length > 0 && (
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8 }}>Suggestions</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                    {coverageScores.overall.insights.slice(0, 3).map((insight, i) => (
-                      <li key={i} style={{ marginBottom: 4 }}>{insight}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
         {/* ═══════════════════════════════════════════════════════════════
             2️⃣ COVERAGE INSIGHTS
         ═══════════════════════════════════════════════════════════════ */}
@@ -672,13 +594,13 @@ export default function PoliciesPage() {
         {/* ═══════════════════════════════════════════════════════════════
             🔍 COVERAGE GAPS - Intelligence insights
         ═══════════════════════════════════════════════════════════════ */}
-        {!loading && coverageGaps.length > 0 && (
+        {!loading && coverageGaps.filter(g => !g.policy_id).length > 0 && (
           <section style={{ marginBottom: 40 }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
-              Coverage Gaps
+              Missing Coverage
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {coverageGaps.filter(g => g.severity !== 'info').slice(0, 5).map((gap) => (
+              {coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).slice(0, 5).map((gap) => (
                 <div
                   key={gap.id}
                   style={{
@@ -728,13 +650,13 @@ export default function PoliciesPage() {
               ))}
 
               {/* Show info-level gaps collapsed */}
-              {coverageGaps.filter(g => g.severity === 'info').length > 0 && (
+              {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).length > 0 && (
                 <details style={{ marginTop: 8 }}>
                   <summary style={{ fontSize: 13, color: 'var(--color-text-muted)', cursor: 'pointer', padding: '8px 0' }}>
-                    {coverageGaps.filter(g => g.severity === 'info').length} additional suggestions
+                    {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).length} additional suggestions
                   </summary>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                    {coverageGaps.filter(g => g.severity === 'info').map((gap) => (
+                    {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).map((gap) => (
                       <div
                         key={gap.id}
                         style={{

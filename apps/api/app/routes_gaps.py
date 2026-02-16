@@ -3,7 +3,7 @@ Gap Analysis API routes.
 Analyzes user's policies and identifies coverage gaps.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -85,3 +85,54 @@ def get_coverage_summary_only(db: Session = Depends(get_db), user: User = Depend
     } for p in policies]
 
     return get_coverage_summary(policy_data)
+
+
+def _build_policy_data(db: Session, user_id: int) -> list[dict]:
+    """Build policy dicts with details and contacts for gap analysis."""
+    policies = db.execute(
+        select(Policy).where(Policy.user_id == user_id)
+    ).scalars().all()
+
+    policy_data = []
+    for p in policies:
+        details = db.execute(
+            select(PolicyDetail).where(PolicyDetail.policy_id == p.id)
+        ).scalars().all()
+        contacts = db.execute(
+            select(Contact).where(Contact.policy_id == p.id)
+        ).scalars().all()
+        policy_data.append({
+            "id": p.id,
+            "policy_type": p.policy_type,
+            "carrier": p.carrier,
+            "policy_number": p.policy_number,
+            "coverage_amount": p.coverage_amount,
+            "deductible": p.deductible,
+            "premium_amount": p.premium_amount,
+            "renewal_date": str(p.renewal_date) if p.renewal_date else None,
+            "created_at": str(p.created_at) if p.created_at else None,
+            "details": [{"field_name": d.field_name, "field_value": d.field_value} for d in details],
+            "contacts": [{"role": c.role, "phone": c.phone, "email": c.email} for c in contacts]
+        })
+    return policy_data
+
+
+@router.get("/policy/{policy_id}")
+def get_policy_gaps(policy_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get gaps specific to a single policy."""
+    policy = db.execute(
+        select(Policy).where(Policy.id == policy_id, Policy.user_id == user.id)
+    ).scalar_one_or_none()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    policy_data = _build_policy_data(db, user.id)
+    gaps = analyze_coverage_gaps(policy_data, {})
+
+    policy_gaps = [
+        g for g in gaps
+        if g.get("policy_id") == policy_id
+        or (g.get("id") and f"_{policy_id}" in str(g.get("id", "")))
+    ]
+
+    return {"gaps": policy_gaps, "policy_id": policy_id}

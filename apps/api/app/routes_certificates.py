@@ -86,10 +86,12 @@ def create_certificate(payload: CertificateCreate, db: Session = Depends(get_db)
 
 
 @router.get("")
-def list_certificates(direction: str | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def list_certificates(direction: str | None = None, policy_id: int | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     q = select(Certificate).where(Certificate.user_id == user.id)
     if direction:
         q = q.where(Certificate.direction == direction)
+    if policy_id is not None:
+        q = q.where(Certificate.policy_id == policy_id)
     certs = db.execute(q.order_by(Certificate.id.desc())).scalars().all()
     today = date.today()
     for c in certs:

@@ -65,18 +65,21 @@ export default function ClientDetailPage() {
     <div style={{ padding: '32px 24px', maxWidth: 900, margin: '0 auto' }}>
       {/* Back link */}
       <button
-        onClick={() => router.push('/agent')}
+        onClick={() => { if (window.history.length > 1) router.back(); else router.push('/agent'); }}
         style={{
           background: 'none',
           border: 'none',
-          color: 'var(--color-primary)',
+          color: 'var(--color-text-secondary)',
           cursor: 'pointer',
           fontSize: 14,
           padding: 0,
           marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}
       >
-        &larr; Back to Dashboard
+        &larr; Back
       </button>
 
       {/* Client Header */}

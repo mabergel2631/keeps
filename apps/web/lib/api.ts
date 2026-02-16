@@ -680,6 +680,9 @@ export const gapsApi = {
   summary(): Promise<CoverageSummary> {
     return request<CoverageSummary>("/gaps/summary");
   },
+  forPolicy(policyId: number): Promise<{ gaps: CoverageGap[]; policy_id: number }> {
+    return request<{ gaps: CoverageGap[]; policy_id: number }>(`/gaps/policy/${policyId}`);
+  },
 };
 
 // ── ICE Emergency Card API ─────────────────────────────
@@ -1103,9 +1106,12 @@ export type CertificateCreate = {
 };
 
 export const certificatesApi = {
-  list(direction?: string): Promise<Certificate[]> {
-    const q = direction ? `?direction=${direction}` : "";
-    return request<Certificate[]>(`/certificates${q}`);
+  list(direction?: string, policyId?: number): Promise<Certificate[]> {
+    const params = new URLSearchParams();
+    if (direction) params.set("direction", direction);
+    if (policyId) params.set("policy_id", String(policyId));
+    const q = params.toString();
+    return request<Certificate[]>(`/certificates${q ? `?${q}` : ""}`);
   },
   get(id: number): Promise<Certificate> {
     return request<Certificate>(`/certificates/${id}`);

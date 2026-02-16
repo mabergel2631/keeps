@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
-import { policiesApi, contactsApi, documentsApi, coverageApi, policyDetailsApi, premiumsApi, claimsApi, sharingApi, exportApi, premiumHistoryApi, exposuresApi, Policy, Contact, DocMeta, ContactCreate, ExtractionData, CoverageItem, CoverageItemCreate, PolicyDetail, PolicyDetailCreate, PolicyUpdate, Premium, PremiumCreate, Claim, ClaimCreate, PolicyShareType, ShareCreate, PremiumHistoryEntry, Exposure } from '../../../../lib/api';
+import { policiesApi, contactsApi, documentsApi, coverageApi, policyDetailsApi, premiumsApi, claimsApi, sharingApi, exportApi, premiumHistoryApi, exposuresApi, gapsApi, certificatesApi, Policy, Contact, DocMeta, ContactCreate, ExtractionData, CoverageItem, CoverageItemCreate, PolicyDetail, PolicyDetailCreate, PolicyUpdate, Premium, PremiumCreate, Claim, ClaimCreate, PolicyShareType, ShareCreate, PremiumHistoryEntry, Exposure, CoverageGap, Certificate } from '../../../../lib/api';
 import { useToast } from '../../components/Toast';
 import { Skeleton } from '../../components/Skeleton';
 
@@ -110,6 +110,8 @@ export default function PolicyDetailPage() {
 
   // Exposures
   const [exposures, setExposures] = useState<Exposure[]>([]);
+  const [policyGaps, setPolicyGaps] = useState<CoverageGap[]>([]);
+  const [policyCertificates, setPolicyCertificates] = useState<Certificate[]>([]);
 
   // Claims quick-start
   const [copiedPolicyNumber, setCopiedPolicyNumber] = useState(false);
@@ -144,7 +146,7 @@ export default function PolicyDetailPage() {
 
   const loadAll = async () => {
     try {
-      const [p, c, d, cv, det, prem, cl, sh, ph, exp] = await Promise.all([
+      const [p, c, d, cv, det, prem, cl, sh, ph, exp, gapsResult, certs] = await Promise.all([
         policiesApi.get(policyId),
         contactsApi.list(policyId),
         documentsApi.list(policyId),
@@ -155,6 +157,8 @@ export default function PolicyDetailPage() {
         sharingApi.listShares(policyId).catch(() => [] as PolicyShareType[]),
         premiumHistoryApi.list(policyId).catch(() => ({ history: [], total_change_pct: 0, entry_count: 0 })),
         exposuresApi.list().catch(() => [] as Exposure[]),
+        gapsApi.forPolicy(policyId).catch(() => ({ gaps: [] as CoverageGap[], policy_id: policyId })),
+        certificatesApi.list(undefined, policyId).catch(() => [] as Certificate[]),
       ]);
       setPolicy(p);
       setContacts(c);
@@ -167,6 +171,8 @@ export default function PolicyDetailPage() {
       setPremiumHistory(ph.history);
       setPremiumHistoryChange(ph.total_change_pct);
       setExposures(exp);
+      setPolicyGaps(gapsResult.gaps || []);
+      setPolicyCertificates(certs);
     } catch (err: any) {
       if (err.status === 401) { logout(); router.replace('/login'); return; }
       setError(err.message);
@@ -394,12 +400,14 @@ export default function PolicyDetailPage() {
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: 24 }}>
-      {/* Breadcrumb */}
-      <nav style={{ marginBottom: 16, fontSize: 13, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button onClick={() => router.push('/policies')} className="btn btn-ghost" style={{ padding: 0, fontSize: 13, color: 'var(--color-accent)' }}>Policies</button>
-        <span>/</span>
-        <span style={{ color: 'var(--color-text)' }}>{policy.nickname || policy.carrier}</span>
-      </nav>
+      {/* Back Navigation */}
+      <button
+        onClick={() => { if (window.history.length > 1) router.back(); else router.push('/policies'); }}
+        className="btn btn-ghost"
+        style={{ padding: '4px 0', fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+      >
+        <span style={{ fontSize: 18, lineHeight: 1 }}>&larr;</span> Back
+      </button>
 
       {error && <div className="alert alert-error">{error}</div>}
 
@@ -743,6 +751,63 @@ export default function PolicyDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Policy Status — derived from gap analysis */}
+      {(() => {
+        const highGaps = policyGaps.filter(g => g.severity === 'high');
+        const medGaps = policyGaps.filter(g => g.severity === 'medium');
+        const infoGaps = policyGaps.filter(g => g.severity === 'info');
+        const actionGaps = [...highGaps, ...medGaps];
+        const statusColor = highGaps.length > 0 ? '#dc2626' : medGaps.length > 0 ? '#d97706' : '#16a34a';
+        const statusBg = highGaps.length > 0 ? '#fef2f2' : medGaps.length > 0 ? '#fffbeb' : '#f0fdf4';
+        const statusLabel = highGaps.length > 0 ? 'Needs Attention' : medGaps.length > 0 ? 'Review Recommended' : 'Looking Good';
+        const statusIcon = highGaps.length > 0 ? '●' : medGaps.length > 0 ? '●' : '●';
+        return (
+          <div className="card" style={{ marginBottom: 24, border: `1px solid ${statusColor}20`, backgroundColor: statusBg }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: actionGaps.length > 0 ? 16 : 0 }}>
+              <span style={{ color: statusColor, fontSize: 20 }}>{statusIcon}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: statusColor }}>{statusLabel}</span>
+              {actionGaps.length === 0 && infoGaps.length === 0 && (
+                <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginLeft: 4 }}>No issues found with this policy</span>
+              )}
+            </div>
+            {actionGaps.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {actionGaps.map((gap, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 12, backgroundColor: '#fff', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+                      backgroundColor: gap.severity === 'high' ? '#fef2f2' : '#fffbeb',
+                      color: gap.severity === 'high' ? '#dc2626' : '#d97706',
+                    }}>{gap.severity === 'high' ? 'High' : 'Medium'}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{gap.name}</div>
+                      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 2 }}>{gap.description}</div>
+                      {gap.recommendation && (
+                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>💡 {gap.recommendation}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {infoGaps.length > 0 && (
+              <details style={{ marginTop: actionGaps.length > 0 ? 12 : 0 }}>
+                <summary style={{ fontSize: 13, color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                  {infoGaps.length} informational note{infoGaps.length > 1 ? 's' : ''}
+                </summary>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                  {infoGaps.map((gap, i) => (
+                    <div key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', paddingLeft: 12, borderLeft: '2px solid var(--color-border)' }}>
+                      <strong>{gap.name}</strong> — {gap.description}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        );
+      })()}
 
       {/* What You're Protected Against - Primary understanding section */}
       <div className="card" style={{ marginBottom: 32, backgroundColor: '#fff' }}>
@@ -1483,6 +1548,47 @@ export default function PolicyDetailPage() {
                 ))}
               </>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Certificates of Insurance */}
+      <div className="card" style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 className="section-title" style={{ margin: 0 }}>Certificates of Insurance</h2>
+          <button onClick={() => router.push('/certificates')} className="btn btn-primary">+ Issue COI</button>
+        </div>
+        {policyCertificates.length === 0 ? (
+          <p style={{ color: '#999', margin: 0, fontSize: 14 }}>No certificates linked to this policy.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 12 }}>
+            {policyCertificates.map(cert => {
+              const isExpired = cert.status === 'expired';
+              const isExpiring = cert.status === 'expiring';
+              const badgeBg = isExpired ? '#fef2f2' : isExpiring ? '#fffbeb' : '#f0fdf4';
+              const badgeColor = isExpired ? '#dc2626' : isExpiring ? '#d97706' : '#16a34a';
+              return (
+                <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{cert.counterparty_name || 'Unnamed'}</span>
+                      <span style={{ padding: '1px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, backgroundColor: '#e8e8e8', color: '#555', textTransform: 'uppercase' }}>
+                        {cert.direction === 'issued' ? 'Issued' : 'Received'}
+                      </span>
+                      <span style={{ padding: '1px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, backgroundColor: badgeBg, color: badgeColor }}>
+                        {cert.status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                      {cert.coverage_types && <span style={{ marginRight: 12 }}>{cert.coverage_types}</span>}
+                      {cert.coverage_amount && <span style={{ marginRight: 12 }}>${Number(cert.coverage_amount).toLocaleString()}</span>}
+                      {cert.expiration_date && <span>Exp: {cert.expiration_date}</span>}
+                    </div>
+                  </div>
+                  <button onClick={() => router.push(`/certificates`)} className="btn btn-outline" style={{ fontSize: 12, padding: '4px 12px' }}>View</button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
