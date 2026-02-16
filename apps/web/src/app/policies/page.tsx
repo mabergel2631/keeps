@@ -833,68 +833,98 @@ function PoliciesPageInner() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════
-            💡 RECOMMENDATIONS
+            💡 RECOMMENDATIONS — grouped by Personal / Business
         ═══════════════════════════════════════════════════════════════ */}
-        {!loading && coverageGaps.filter(g => !g.policy_id).length > 0 && (
-          <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
-              Recommendations
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).slice(0, 5).map((gap) => (
-                <div
-                  key={gap.id}
-                  style={{
-                    padding: 16,
-                    backgroundColor: gap.severity === 'high' ? '#fef2f2' : gap.severity === 'medium' ? '#fffbeb' : '#f0fdf4',
-                    border: `1px solid ${gap.severity === 'high' ? '#fecaca' : gap.severity === 'medium' ? '#fde68a' : '#bbf7d0'}`,
-                    borderRadius: 'var(--radius-md)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      backgroundColor: gap.severity === 'high' ? '#fee2e2' : gap.severity === 'medium' ? '#fef3c7' : '#dcfce7',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      {gap.severity === 'high' ? '⚠️' : gap.severity === 'medium' ? '💡' : '✓'}
+        {(() => {
+          const PERSONAL_CATEGORIES = new Set(['auto_liability', 'personal_property', 'life_insurance', 'umbrella_liability', 'dwelling_coverage']);
+          const BUSINESS_CATEGORIES = new Set(['general_liability', 'cyber_liability', 'employment_practices', 'professional_liability']);
+          const portfolioGaps = coverageGaps.filter(g => !g.policy_id);
+          const personalGaps = portfolioGaps.filter(g => PERSONAL_CATEGORIES.has(g.category));
+          const businessGaps = portfolioGaps.filter(g => BUSINESS_CATEGORIES.has(g.category));
+
+          const showPersonal = scopeTab !== 'business' && personalGaps.length > 0;
+          const showBusiness = scopeTab !== 'personal' && businessGaps.length > 0;
+
+          if (!loading && (showPersonal || showBusiness)) {
+            const renderGapCard = (gap: CoverageGap) => (
+              <div
+                key={gap.id}
+                style={{
+                  padding: 16,
+                  backgroundColor: gap.severity === 'high' ? '#fef2f2' : gap.severity === 'medium' ? '#fffbeb' : '#f0fdf4',
+                  border: `1px solid ${gap.severity === 'high' ? '#fecaca' : gap.severity === 'medium' ? '#fde68a' : '#bbf7d0'}`,
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    backgroundColor: gap.severity === 'high' ? '#fee2e2' : gap.severity === 'medium' ? '#fef3c7' : '#dcfce7',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    {gap.severity === 'high' ? '⚠️' : gap.severity === 'medium' ? '💡' : '✓'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{gap.name}</span>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, textTransform: 'uppercase',
+                        backgroundColor: gap.severity === 'high' ? '#fee2e2' : gap.severity === 'medium' ? '#fef3c7' : '#dcfce7',
+                        color: gap.severity === 'high' ? '#991b1b' : gap.severity === 'medium' ? '#92400e' : '#166534',
+                      }}>
+                        {gap.severity}
+                      </span>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{gap.name}</span>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, textTransform: 'uppercase',
-                          backgroundColor: gap.severity === 'high' ? '#fee2e2' : gap.severity === 'medium' ? '#fef3c7' : '#dcfce7',
-                          color: gap.severity === 'high' ? '#991b1b' : gap.severity === 'medium' ? '#92400e' : '#166534',
-                        }}>
-                          {gap.severity}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: '0 0 8px', lineHeight: 1.5 }}>{gap.description}</p>
-                      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0, fontStyle: 'italic' }}>{gap.recommendation}</p>
-                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: '0 0 8px', lineHeight: 1.5 }}>{gap.description}</p>
+                    <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0, fontStyle: 'italic' }}>{gap.recommendation}</p>
                   </div>
                 </div>
-              ))}
+              </div>
+            );
 
-              {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).length > 0 && (
-                <details style={{ marginTop: 8 }}>
-                  <summary style={{ fontSize: 13, color: 'var(--color-text-muted)', cursor: 'pointer', padding: '8px 0' }}>
-                    {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).length} additional suggestions
-                  </summary>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                    {coverageGaps.filter(g => g.severity === 'info' && !g.policy_id).map((gap) => (
-                      <div key={gap.id} style={{ padding: 12, backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-sm)' }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text)', marginBottom: 4 }}>{gap.name}</div>
-                        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0 }}>{gap.recommendation}</p>
-                      </div>
-                    ))}
+            const renderGapGroup = (label: string, icon: string, gaps: CoverageGap[]) => {
+              const actionable = gaps.filter(g => g.severity !== 'info');
+              const info = gaps.filter(g => g.severity === 'info');
+              return (
+                <div key={label}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 16 }}>{icon}</span>
+                    <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>{label}</h3>
                   </div>
-                </details>
-              )}
-            </div>
-          </section>
-        )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                    {actionable.map(renderGapCard)}
+                    {info.length > 0 && (
+                      <details style={{ marginTop: 4 }}>
+                        <summary style={{ fontSize: 13, color: 'var(--color-text-muted)', cursor: 'pointer', padding: '8px 0' }}>
+                          {info.length} additional suggestion{info.length !== 1 ? 's' : ''}
+                        </summary>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                          {info.map((gap) => (
+                            <div key={gap.id} style={{ padding: 12, backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-sm)' }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text)', marginBottom: 4 }}>{gap.name}</div>
+                              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0 }}>{gap.recommendation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              );
+            };
+
+            return (
+              <section style={{ marginBottom: 40 }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+                  Recommendations
+                </h2>
+                {showPersonal && renderGapGroup('Personal', '👤', personalGaps)}
+                {showBusiness && renderGapGroup('Business', '🏢', businessGaps)}
+              </section>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
