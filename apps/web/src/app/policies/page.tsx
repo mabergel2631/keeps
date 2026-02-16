@@ -489,43 +489,79 @@ function PoliciesPageInner() {
             {loading ? 'Loading...' : 'Coverage Overview'}
           </h1>
 
-          {!loading && (
-            <div style={{
-              padding: '24px 28px',
-              backgroundColor: '#fff',
-              border: `1px solid ${urgentAlerts.length > 0 ? '#fecaca' : '#e5e7eb'}`,
-              borderRadius: 'var(--radius-lg)',
-              borderLeft: `4px solid ${urgentAlerts.length > 0 ? '#dc2626' : coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length > 0 ? '#f59e0b' : '#22c55e'}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <div style={{
-                  width: 10, height: 10, borderRadius: '50%',
-                  backgroundColor: urgentAlerts.length > 0 ? '#dc2626' : coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length > 0 ? '#f59e0b' : '#22c55e',
-                }} />
-                <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)' }}>
-                  {urgentAlerts.length > 0
-                    ? `${urgentAlerts.length} item${urgentAlerts.length > 1 ? 's' : ''} need${urgentAlerts.length === 1 ? 's' : ''} attention`
-                    : scopedPolicies.length === 0
-                    ? 'Get started by adding your first policy'
-                    : 'No immediate risks detected'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14, color: 'var(--color-text-secondary)' }}>
-                {daysToNextRenewal !== null && daysToNextRenewal > 0 && (
-                  <div>Next renewal: <strong>{nextRenewal?.nickname || nextRenewal?.carrier}</strong> — {daysToNextRenewal} days</div>
-                )}
-                {daysToNextRenewal !== null && daysToNextRenewal <= 0 && (
-                  <div style={{ color: '#dc2626', fontWeight: 500 }}>A policy renewal is overdue</div>
-                )}
-                {coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length > 0 ? (
-                  <div>Potential gaps: {coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length} detected</div>
-                ) : scopedPolicies.length > 0 ? (
-                  <div>Potential gaps: None detected</div>
-                ) : null}
+          {!loading && scopedPolicies.length > 0 && (() => {
+            const expiredPolicies = scopedPolicies.filter(p => p.status === 'expired');
+            const overduePolicies = scopedRenewals.filter(r => {
+              const days = Math.ceil((new Date(r.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return days <= 0;
+            });
+            const portfolioGapCount = coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length;
+
+            // Build status items
+            const items: { color: string; text: string }[] = [];
+
+            // Red items
+            overduePolicies.forEach(r => {
+              items.push({ color: '#dc2626', text: `${r.nickname || r.carrier} renewal is overdue` });
+            });
+            expiredPolicies.forEach(p => {
+              items.push({ color: '#dc2626', text: `${p.nickname || p.carrier} (${POLICY_TYPE_CONFIG[p.policy_type]?.label || p.policy_type}) is expired` });
+            });
+            urgentAlerts.forEach(a => {
+              items.push({ color: '#dc2626', text: a.title });
+            });
+
+            // Yellow items
+            if (portfolioGapCount > 0) {
+              items.push({ color: '#f59e0b', text: `${portfolioGapCount} potential coverage gap${portfolioGapCount > 1 ? 's' : ''} detected` });
+            }
+            if (daysToNextRenewal !== null && daysToNextRenewal > 0 && daysToNextRenewal <= 60) {
+              items.push({ color: '#f59e0b', text: `${nextRenewal?.nickname || nextRenewal?.carrier} renews in ${daysToNextRenewal} days` });
+            }
+
+            // Green items
+            if (items.length === 0) {
+              items.push({ color: '#22c55e', text: 'All policies current. No gaps or upcoming renewals.' });
+            }
+
+            const hasRed = items.some(i => i.color === '#dc2626');
+            const hasYellow = items.some(i => i.color === '#f59e0b');
+
+            return (
+              <div style={{
+                padding: '24px 28px',
+                backgroundColor: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 'var(--radius-lg)',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
+                  Status
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {items.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: item.color, flexShrink: 0 }} />
+                      <span style={{ color: item.color === '#22c55e' ? 'var(--color-text-secondary)' : 'var(--color-text)', fontWeight: item.color === '#dc2626' ? 600 : 400 }}>
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
                 {annualSpend > 0 && (
-                  <div>Annual premium: ${(annualSpend / 100).toLocaleString()}</div>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f3f4f6', fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                    Annual premium: <strong>${(annualSpend / 100).toLocaleString()}</strong>
+                  </div>
                 )}
               </div>
+            );
+          })()}
+
+          {!loading && scopedPolicies.length === 0 && (
+            <div style={{
+              padding: '24px 28px', backgroundColor: '#fff', border: '1px solid #e5e7eb',
+              borderRadius: 'var(--radius-lg)', fontSize: 16, fontWeight: 600, color: 'var(--color-text-muted)',
+            }}>
+              Get started by adding your first policy
             </div>
           )}
         </section>
