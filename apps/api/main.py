@@ -73,6 +73,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 def on_startup():
+    logging.info("Starting up — creating tables if needed")
     Base.metadata.create_all(bind=engine)
     # Add nickname column to existing policies table if missing
     from sqlalchemy import inspect, text
