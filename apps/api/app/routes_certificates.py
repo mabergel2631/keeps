@@ -1,11 +1,14 @@
+import io
 from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+import pdfplumber
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
 from .auth import get_current_user
 from .db import get_db
+from .extraction import get_extractor
 from .models import Policy, User
 from .models_features import Certificate, CertificateReminder
 from .schemas import CertificateCreate, CertificateUpdate
@@ -98,6 +101,68 @@ def list_certificates(direction: str | None = None, policy_id: int | None = None
         _update_status(c, today)
     db.commit()
     return [_enrich(c, db) for c in certs]
+
+
+@router.post("/extract-pdf")
+async def extract_coi_pdf(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
+    """Upload a COI PDF and extract certificate fields via LLM."""
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+
+    pdf_bytes = await file.read()
+    if len(pdf_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large (max 10 MB)")
+
+    text = ""
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+
+    extractor = get_extractor()
+
+    if text.strip():
+        result = extractor.extract_coi(text)
+    else:
+        import fitz
+        images: list[bytes] = []
+        pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        for page in pdf_doc:
+            pix = page.get_pixmap(dpi=200)
+            images.append(pix.tobytes("png"))
+        pdf_doc.close()
+        if not images:
+            raise HTTPException(status_code=422, detail="Could not extract content from PDF")
+        result = extractor.extract_coi_images(images)
+
+    coverage_types_str = ", ".join(result.coverage_types) if result.coverage_types else None
+    coverage_cents = result.primary_coverage_amount * 100 if result.primary_coverage_amount else None
+
+    return {
+        "ok": True,
+        "extraction": {
+            "counterparty_name": result.certificate_holder_name or "",
+            "counterparty_type": result.certificate_holder_type or "other",
+            "counterparty_email": result.certificate_holder_email,
+            "carrier": result.carrier,
+            "policy_number": result.policy_number,
+            "coverage_types": coverage_types_str,
+            "coverage_amount": coverage_cents,
+            "additional_insured": result.additional_insured,
+            "waiver_of_subrogation": result.waiver_of_subrogation,
+            "effective_date": result.effective_date,
+            "expiration_date": result.expiration_date,
+            "notes": result.description_of_operations,
+            "insured_name": result.insured_name,
+            "producer_name": result.producer_name,
+            "producer_phone": result.producer_phone,
+            "producer_email": result.producer_email,
+        },
+    }
 
 
 @router.get("/{cert_id}")

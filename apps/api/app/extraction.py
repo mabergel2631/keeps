@@ -171,6 +171,31 @@ class AnthropicExtractor(BaseExtractor):
         raw = message.content[0].text
         return _parse_response(raw)
 
+    def extract_coi(self, text: str) -> "COIExtractionResult":
+        import anthropic
+        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=COI_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": f"Extract data from this Certificate of Insurance:\n\n{text[:50000]}"}],
+        )
+        return _parse_coi_response(message.content[0].text)
+
+    def extract_coi_images(self, images: list[bytes]) -> "COIExtractionResult":
+        import anthropic, base64
+        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        content: list[dict] = [{"type": "text", "text": "Extract data from this Certificate of Insurance (scanned pages):"}]
+        for img in images[:20]:
+            content.append({"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": base64.b64encode(img).decode()}})
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=COI_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": content}],
+        )
+        return _parse_coi_response(message.content[0].text)
+
 
 class OpenAIExtractor(BaseExtractor):
     def extract(self, text: str) -> ExtractionResult:
@@ -203,6 +228,35 @@ class OpenAIExtractor(BaseExtractor):
         )
         raw = response.choices[0].message.content or ""
         return _parse_response(raw)
+
+    def extract_coi(self, text: str) -> "COIExtractionResult":
+        import openai
+        client = openai.OpenAI(api_key=settings.openai_api_key)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            max_tokens=4096,
+            messages=[
+                {"role": "system", "content": COI_SYSTEM_PROMPT},
+                {"role": "user", "content": f"Extract data from this Certificate of Insurance:\n\n{text[:50000]}"},
+            ],
+        )
+        return _parse_coi_response(response.choices[0].message.content or "")
+
+    def extract_coi_images(self, images: list[bytes]) -> "COIExtractionResult":
+        import openai, base64
+        client = openai.OpenAI(api_key=settings.openai_api_key)
+        content: list[dict] = [{"type": "text", "text": "Extract data from this Certificate of Insurance (scanned pages):"}]
+        for img in images[:20]:
+            content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64.b64encode(img).decode()}"}})
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            max_tokens=4096,
+            messages=[
+                {"role": "system", "content": COI_SYSTEM_PROMPT},
+                {"role": "user", "content": content},
+            ],
+        )
+        return _parse_coi_response(response.choices[0].message.content or "")
 
 
 def get_extractor() -> BaseExtractor:
@@ -320,5 +374,100 @@ def _parse_response(raw: str) -> ExtractionResult:
         contacts=contacts,
         coverage_items=coverage_items,
         details=details,
+        raw_response=raw,
+    )
+
+
+# ── COI (Certificate of Insurance) Extraction ──────────
+
+COI_SYSTEM_PROMPT = """You are an expert insurance document parser specializing in Certificates of Insurance (COI), including ACORD 25 and ACORD 28 forms.
+
+Return ONLY valid JSON with this exact schema (use null for missing fields):
+{
+  "certificate_holder_name": "string or null - the entity who requested / received the COI (usually at bottom-left of ACORD 25)",
+  "certificate_holder_type": "string or null - one of: landlord, lender, client, vendor, contractor, tenant, property_manager, other",
+  "certificate_holder_email": "string or null",
+  "insured_name": "string or null - the named insured shown on the certificate",
+  "carrier": "string or null - the insurance company / insurer name",
+  "policy_number": "string or null - primary policy number on the certificate",
+  "coverage_types": "list of strings - coverage types present, from: General Liability, Auto, Workers Comp, Umbrella, Professional Liability, Property",
+  "primary_coverage_amount": "integer or null - the highest general aggregate or combined coverage limit in DOLLARS (e.g. 2000000 for $2M)",
+  "additional_insured": "boolean - true if certificate holder is listed as additional insured",
+  "waiver_of_subrogation": "boolean - true if waiver of subrogation applies",
+  "effective_date": "string or null - YYYY-MM-DD, earliest policy effective date on the certificate",
+  "expiration_date": "string or null - YYYY-MM-DD, latest policy expiration date on the certificate",
+  "description_of_operations": "string or null - the Description of Operations / Locations / Vehicles section",
+  "producer_name": "string or null - insurance agent or broker name",
+  "producer_phone": "string or null",
+  "producer_email": "string or null"
+}
+
+CRITICAL INSTRUCTIONS:
+1. COVERAGE TYPES: List ALL coverage types present on the certificate (GL, auto, umbrella, workers comp, professional liability, property).
+2. AMOUNTS: Return dollar values as integers (e.g. 1000000 for $1,000,000). Look for General Aggregate, Each Occurrence, Combined Single Limit.
+3. ADDITIONAL INSURED / WAIVER: Check the Description of Operations section AND any checkboxes.
+4. CERTIFICATE HOLDER: Typically at the bottom-left of an ACORD 25 form.
+5. DATES: If multiple policies have different dates, use the earliest effective and latest expiration.
+6. primary_coverage_amount: Use the largest general aggregate or combined limit found.
+
+Return ONLY the JSON object, no markdown fences or explanation."""
+
+
+@dataclass
+class COIExtractionResult:
+    certificate_holder_name: Optional[str] = None
+    certificate_holder_type: Optional[str] = None
+    certificate_holder_email: Optional[str] = None
+    insured_name: Optional[str] = None
+    carrier: Optional[str] = None
+    policy_number: Optional[str] = None
+    coverage_types: list[str] = field(default_factory=list)
+    primary_coverage_amount: Optional[int] = None
+    additional_insured: bool = False
+    waiver_of_subrogation: bool = False
+    effective_date: Optional[str] = None
+    expiration_date: Optional[str] = None
+    description_of_operations: Optional[str] = None
+    producer_name: Optional[str] = None
+    producer_phone: Optional[str] = None
+    producer_email: Optional[str] = None
+    raw_response: str = ""
+
+
+def _parse_coi_response(raw: str) -> COIExtractionResult:
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+        raw = raw.strip()
+
+    data = json.loads(raw)
+
+    coverage_types = data.get("coverage_types") or []
+    if isinstance(coverage_types, str):
+        coverage_types = [t.strip() for t in coverage_types.split(",") if t.strip()]
+
+    amount = data.get("primary_coverage_amount")
+    if amount is not None:
+        amount = int(amount)
+
+    return COIExtractionResult(
+        certificate_holder_name=data.get("certificate_holder_name"),
+        certificate_holder_type=data.get("certificate_holder_type"),
+        certificate_holder_email=data.get("certificate_holder_email"),
+        insured_name=data.get("insured_name"),
+        carrier=data.get("carrier"),
+        policy_number=data.get("policy_number"),
+        coverage_types=coverage_types,
+        primary_coverage_amount=amount,
+        additional_insured=bool(data.get("additional_insured", False)),
+        waiver_of_subrogation=bool(data.get("waiver_of_subrogation", False)),
+        effective_date=data.get("effective_date"),
+        expiration_date=data.get("expiration_date"),
+        description_of_operations=data.get("description_of_operations"),
+        producer_name=data.get("producer_name"),
+        producer_phone=data.get("producer_phone"),
+        producer_email=data.get("producer_email"),
         raw_response=raw,
     )

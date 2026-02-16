@@ -1133,4 +1133,35 @@ export const certificatesApi = {
   remove(id: number): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/certificates/${id}`, { method: "DELETE" });
   },
+  async extractFromPdf(file: File): Promise<{ ok: boolean; extraction: COIExtraction }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const url = `${API_BASE}/certificates/extract-pdf`;
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(url, { method: "POST", headers, body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Extraction failed");
+    return data;
+  },
+};
+
+export type COIExtraction = {
+  counterparty_name: string;
+  counterparty_type: string;
+  counterparty_email: string | null;
+  carrier: string | null;
+  policy_number: string | null;
+  coverage_types: string | null;
+  coverage_amount: number | null;
+  additional_insured: boolean;
+  waiver_of_subrogation: boolean;
+  effective_date: string | null;
+  expiration_date: string | null;
+  notes: string | null;
+  insured_name: string | null;
+  producer_name: string | null;
+  producer_phone: string | null;
+  producer_email: string | null;
 };

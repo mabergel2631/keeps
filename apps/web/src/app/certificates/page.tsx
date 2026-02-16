@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
 import { certificatesApi, policiesApi, Certificate, CertificateCreate, Policy } from '../../../lib/api';
@@ -44,6 +44,8 @@ export default function CertificatesPage() {
     counterparty_name: '',
     counterparty_type: 'client',
   });
+  const [extracting, setExtracting] = useState(false);
+  const coiFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!token) { router.replace('/login'); return; }
@@ -120,6 +122,37 @@ export default function CertificatesPage() {
       load();
     } catch {
       toast('Failed to delete', 'error');
+    }
+  }
+
+  async function handleExtractCOI() {
+    const file = coiFileRef.current?.files?.[0];
+    if (!file) { toast('Please select a PDF file', 'error'); return; }
+    if (!file.name.toLowerCase().endsWith('.pdf')) { toast('Only PDF files are supported', 'error'); return; }
+    setExtracting(true);
+    try {
+      const { extraction } = await certificatesApi.extractFromPdf(file);
+      setForm(f => ({
+        ...f,
+        counterparty_name: extraction.counterparty_name || f.counterparty_name,
+        counterparty_type: extraction.counterparty_type || f.counterparty_type,
+        counterparty_email: extraction.counterparty_email || f.counterparty_email,
+        carrier: extraction.carrier || f.carrier,
+        policy_number: extraction.policy_number || f.policy_number,
+        coverage_types: extraction.coverage_types || f.coverage_types,
+        coverage_amount: extraction.coverage_amount ?? f.coverage_amount,
+        additional_insured: extraction.additional_insured,
+        waiver_of_subrogation: extraction.waiver_of_subrogation,
+        effective_date: extraction.effective_date || f.effective_date,
+        expiration_date: extraction.expiration_date || f.expiration_date,
+        notes: extraction.notes || f.notes,
+      }));
+      toast('COI data extracted successfully');
+      if (coiFileRef.current) coiFileRef.current.value = '';
+    } catch (err: any) {
+      toast(err.message || 'Extraction failed', 'error');
+    } finally {
+      setExtracting(false);
     }
   }
 
@@ -279,6 +312,37 @@ export default function CertificatesPage() {
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>
               {editingId ? 'Edit Certificate' : 'Add Certificate'}
             </h2>
+
+            {/* Upload & Extract COI */}
+            {!editingId && (
+              <div style={{
+                marginBottom: 20, padding: 16, backgroundColor: '#f0f9ff',
+                border: '1px dashed #93c5fd', borderRadius: 'var(--radius-md)',
+              }}>
+                <label style={{ ...labelStyle, marginBottom: 8 }}>Upload COI PDF to auto-fill fields</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input ref={coiFileRef} type="file" accept=".pdf" style={{ fontSize: 13, flex: 1 }} />
+                  <button
+                    type="button"
+                    onClick={handleExtractCOI}
+                    disabled={extracting}
+                    style={{
+                      padding: '8px 16px', backgroundColor: '#2563eb', color: '#fff',
+                      border: 'none', borderRadius: 'var(--radius-sm)',
+                      fontWeight: 600, fontSize: 13, cursor: extracting ? 'wait' : 'pointer',
+                      opacity: extracting ? 0.7 : 1, whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {extracting ? 'Extracting...' : 'Upload & Extract'}
+                  </button>
+                </div>
+                {extracting && (
+                  <p style={{ fontSize: 12, color: '#2563eb', marginTop: 8, fontStyle: 'italic', margin: '8px 0 0' }}>
+                    Reading PDF and extracting certificate data... This may take a few seconds.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Direction toggle */}
             <div style={{ marginBottom: 16 }}>
