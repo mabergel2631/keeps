@@ -1,21 +1,35 @@
-<svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Top/Left teal gradient -->
     <linearGradient id="gTeal" x1="16" y1="14" x2="108" y2="72" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#5CBDB7"/>
       <stop offset="1" stop-color="#3FA7A3"/>
     </linearGradient>
+
+    <!-- Bottom/Right slate gradient -->
     <linearGradient id="gSlate" x1="22" y1="52" x2="112" y2="116" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#516FA8"/>
       <stop offset="1" stop-color="#2E4F87"/>
     </linearGradient>
   </defs>
+
+  <!-- OUTER RING (teal + slate) -->
+  <!-- Teal segment (top + left) -->
   <path d="M36 18H94C102.837 18 110 25.1634 110 34V46H96V36C96 33.7909 94.2091 32 92 32H38C35.7909 32 34 33.7909 34 36V92C34 94.2091 35.7909 96 38 96H50V110H36C27.1634 110 20 102.837 20 94V34C20 25.1634 27.1634 18 36 18Z"
         fill="url(#gTeal)"/>
+
+  <!-- Slate segment (bottom + right) -->
   <path d="M78 110H34C25.1634 110 18 102.837 18 94V78H32V92C32 94.2091 33.7909 96 36 96H92C94.2091 96 96 94.2091 96 92V36C96 33.7909 94.2091 32 92 32H78V18H94C102.837 18 110 25.1634 110 34V94C110 102.837 102.837 110 94 110H78Z"
         fill="url(#gSlate)"/>
+
+  <!-- INNER INSET (gives the "layered" look) -->
   <path d="M44 36H84C90.6274 36 96 41.3726 96 48V58H86V50C86 47.7909 84.2091 46 82 46H46C43.7909 46 42 47.7909 42 50V82C42 84.2091 43.7909 86 46 86H58V96H48C41.3726 96 36 90.6274 36 84V48C36 41.3726 41.3726 36 48 36H44Z"
         fill="#2B3E6A" opacity="0.55"/>
+
+  <!-- Right "tabs" (small light bars at top-right) -->
   <rect x="92" y="36" width="18" height="6" fill="#DCE3EE" opacity="0.70"/>
   <rect x="92" y="46" width="18" height="6" fill="#DCE3EE" opacity="0.45"/>
+
+  <!-- Bottom-left small block (echoes the break in the mark) -->
   <rect x="20" y="92" width="18" height="18" fill="#2E4F87" opacity="0.85"/>
 </svg>
