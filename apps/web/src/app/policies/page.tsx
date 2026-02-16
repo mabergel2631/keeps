@@ -490,42 +490,41 @@ function PoliciesPageInner() {
           </h1>
 
           {!loading && scopedPolicies.length > 0 && (() => {
-            const expiredPolicies = scopedPolicies.filter(p => p.status === 'expired');
-            const overduePolicies = scopedRenewals.filter(r => {
-              const days = Math.ceil((new Date(r.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-              return days <= 0;
+            // Detect expired policies: either status field is 'expired' OR renewal_date is past
+            const expiredPolicies = scopedPolicies.filter(p => {
+              if (p.status === 'expired') return true;
+              if (p.renewal_date) {
+                const days = Math.ceil((new Date(p.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                return days < 0 && p.status !== 'archived';
+              }
+              return false;
             });
-            const portfolioGapCount = coverageGaps.filter(g => g.severity !== 'info' && !g.policy_id).length;
 
-            // Build status items
+            // Build status items — only real issues with existing policies
             const items: { color: string; text: string }[] = [];
 
-            // Red items
-            overduePolicies.forEach(r => {
-              items.push({ color: '#dc2626', text: `${r.nickname || r.carrier} renewal is overdue` });
-            });
+            // Red: expired policies
             expiredPolicies.forEach(p => {
               items.push({ color: '#dc2626', text: `${p.nickname || p.carrier} (${POLICY_TYPE_CONFIG[p.policy_type]?.label || p.policy_type}) is expired` });
             });
+
+            // Red: urgent smart alerts
             urgentAlerts.forEach(a => {
               items.push({ color: '#dc2626', text: a.title });
             });
 
-            // Yellow items
-            if (portfolioGapCount > 0) {
-              items.push({ color: '#f59e0b', text: `${portfolioGapCount} potential coverage gap${portfolioGapCount > 1 ? 's' : ''} detected` });
-            }
-            if (daysToNextRenewal !== null && daysToNextRenewal > 0 && daysToNextRenewal <= 60) {
-              items.push({ color: '#f59e0b', text: `${nextRenewal?.nickname || nextRenewal?.carrier} renews in ${daysToNextRenewal} days` });
-            }
+            // Yellow: renewals within 60 days (not expired — those are already red above)
+            scopedRenewals.forEach(r => {
+              const days = Math.ceil((new Date(r.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              if (days > 0 && days <= 60) {
+                items.push({ color: '#f59e0b', text: `${r.nickname || r.carrier} renews in ${days} days` });
+              }
+            });
 
-            // Green items
+            // Green: all clear
             if (items.length === 0) {
-              items.push({ color: '#22c55e', text: 'All policies current. No gaps or upcoming renewals.' });
+              items.push({ color: '#22c55e', text: 'All policies current. No upcoming renewals.' });
             }
-
-            const hasRed = items.some(i => i.color === '#dc2626');
-            const hasYellow = items.some(i => i.color === '#f59e0b');
 
             return (
               <div style={{
