@@ -142,9 +142,44 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          3. OWN YOUR COVERAGE
+          3. COMPARISON
       ═══════════════════════════════════════════════════════════════ */}
       <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
+            Insurance management hasn&apos;t changed in 20 years.
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
+            <div className="card" style={{ padding: 32, backgroundColor: '#fafafa' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-text-muted)' }}>Without {APP_NAME}</h3>
+              <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text-secondary)', lineHeight: 2.2, listStyleType: "'\\2717  '" }}>
+                <li>Policies in drawers, emails, and portals you rarely check</li>
+                <li>No idea what&apos;s actually covered until you need it</li>
+                <li>Renewals pass without review</li>
+                <li>Gaps discovered when a claim is denied</li>
+                <li>Calling your agent and waiting on hold for basic answers</li>
+                <li>Family has no access if something happens to you</li>
+              </ul>
+            </div>
+            <div className="card" style={{ padding: 32, borderColor: 'var(--color-primary)', borderWidth: 2 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-primary)' }}>With {APP_NAME}</h3>
+              <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text)', lineHeight: 2.2, listStyleType: "'\\2713  '" }}>
+                <li>Every policy structured and searchable in one place</li>
+                <li>Limits, deductibles, and gaps visible at a glance</li>
+                <li>Renewal alerts before every deadline</li>
+                <li>Changes detected and explained in plain language</li>
+                <li>Instant answers — no phone calls required</li>
+                <li>Secure emergency access for the people who need it</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          4. OWN YOUR COVERAGE (what you get)
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', textAlign: 'center', color: 'var(--color-text)' }}>
             One place for everything you&apos;re covered for
@@ -169,9 +204,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          4. HOW IT WORKS
+          5. HOW IT WORKS
       ═══════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" style={{ padding: '80px 24px', background: '#fff' }}>
+      <section id="how-it-works" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
             How it works
@@ -203,9 +238,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          5. WHAT YOU'LL KNOW
+          6. WHAT YOU'LL KNOW
       ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+      <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
             After 10 minutes with {APP_NAME}, you&apos;ll know:
@@ -228,9 +263,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          6. EMERGENCY SHARING (ELEVATED)
+          7. EMERGENCY SHARING (ELEVATED)
       ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', background: '#fff' }}>
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
             Be ready when it matters
@@ -255,9 +290,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          7. WHO IT'S FOR
+          8. WHO IT'S FOR
       ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+      <section style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 40px', textAlign: 'center', color: 'var(--color-text)' }}>
             Built for people who take coverage seriously
@@ -274,41 +309,6 @@ export default function Home() {
                 <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{p.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          8. COMPARISON
-      ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
-            Insurance management hasn&apos;t changed in 20 years.
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
-            <div className="card" style={{ padding: 32, backgroundColor: '#fafafa' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-text-muted)' }}>Without {APP_NAME}</h3>
-              <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text-secondary)', lineHeight: 2.2, listStyleType: "'\\2717  '" }}>
-                <li>Policies in drawers, emails, and portals you rarely check</li>
-                <li>No idea what&apos;s actually covered until you need it</li>
-                <li>Renewals pass without review</li>
-                <li>Gaps discovered when a claim is denied</li>
-                <li>Calling your agent and waiting on hold for basic answers</li>
-                <li>Family has no access if something happens to you</li>
-              </ul>
-            </div>
-            <div className="card" style={{ padding: 32, borderColor: 'var(--color-primary)', borderWidth: 2 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 20px', color: 'var(--color-primary)' }}>With {APP_NAME}</h3>
-              <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--color-text)', lineHeight: 2.2, listStyleType: "'\\2713  '" }}>
-                <li>Every policy structured and searchable in one place</li>
-                <li>Limits, deductibles, and gaps visible at a glance</li>
-                <li>Renewal alerts before every deadline</li>
-                <li>Changes detected and explained in plain language</li>
-                <li>Instant answers — no phone calls required</li>
-                <li>Secure emergency access for the people who need it</li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>
