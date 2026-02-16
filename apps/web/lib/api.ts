@@ -1056,3 +1056,75 @@ export const agentApi = {
     return request<AgentClientSummary>(`/agent/clients/${clientId}/summary`);
   },
 };
+
+// ── Certificates ──────────────────────────────────────
+
+export type Certificate = {
+  id: number;
+  user_id: number;
+  direction: string;
+  policy_id: number | null;
+  counterparty_name: string;
+  counterparty_type: string;
+  counterparty_email: string | null;
+  carrier: string | null;
+  policy_number: string | null;
+  coverage_types: string | null;
+  coverage_amount: number | null;
+  additional_insured: boolean;
+  waiver_of_subrogation: boolean;
+  minimum_coverage: number | null;
+  effective_date: string | null;
+  expiration_date: string | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  policy_carrier: string | null;
+  policy_type: string | null;
+};
+
+export type CertificateCreate = {
+  direction: string;
+  policy_id?: number | null;
+  counterparty_name: string;
+  counterparty_type: string;
+  counterparty_email?: string | null;
+  carrier?: string | null;
+  policy_number?: string | null;
+  coverage_types?: string | null;
+  coverage_amount?: number | null;
+  additional_insured?: boolean;
+  waiver_of_subrogation?: boolean;
+  minimum_coverage?: number | null;
+  effective_date?: string | null;
+  expiration_date?: string | null;
+  status?: string;
+  notes?: string | null;
+};
+
+export const certificatesApi = {
+  list(direction?: string): Promise<Certificate[]> {
+    const q = direction ? `?direction=${direction}` : "";
+    return request<Certificate[]>(`/certificates${q}`);
+  },
+  get(id: number): Promise<Certificate> {
+    return request<Certificate>(`/certificates/${id}`);
+  },
+  create(payload: CertificateCreate): Promise<Certificate> {
+    return request<Certificate>("/certificates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+  update(id: number, payload: Partial<CertificateCreate>): Promise<Certificate> {
+    return request<Certificate>(`/certificates/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+  remove(id: number): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/certificates/${id}`, { method: "DELETE" });
+  },
+};

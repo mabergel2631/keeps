@@ -169,6 +169,57 @@ COVERAGE_CATEGORIES = {
         importance="important",
         typical_sources=["auto"]
     ),
+
+    # Business Coverage
+    "general_liability": CoverageCategory(
+        id="general_liability",
+        name="General Liability",
+        description="Covers third-party bodily injury and property damage claims against your business",
+        importance="critical",
+        typical_sources=["general_liability", "bop"]
+    ),
+    "professional_liability": CoverageCategory(
+        id="professional_liability",
+        name="Professional Liability (E&O)",
+        description="Covers claims of professional negligence, errors, or omissions",
+        importance="critical",
+        typical_sources=["professional_liability"]
+    ),
+    "commercial_property": CoverageCategory(
+        id="commercial_property",
+        name="Commercial Property",
+        description="Covers business property, equipment, and inventory",
+        importance="critical",
+        typical_sources=["commercial_property", "bop"]
+    ),
+    "commercial_auto_liability": CoverageCategory(
+        id="commercial_auto_liability",
+        name="Commercial Auto",
+        description="Covers business vehicles and commercial driving liability",
+        importance="important",
+        typical_sources=["commercial_auto"]
+    ),
+    "cyber_liability": CoverageCategory(
+        id="cyber_liability",
+        name="Cyber Liability",
+        description="Covers data breaches, ransomware, and cyber incidents",
+        importance="important",
+        typical_sources=["cyber"]
+    ),
+    "directors_officers": CoverageCategory(
+        id="directors_officers",
+        name="Directors & Officers",
+        description="Protects company leadership from personal liability in management decisions",
+        importance="important",
+        typical_sources=["directors_officers"]
+    ),
+    "employment_practices": CoverageCategory(
+        id="employment_practices",
+        name="Employment Practices Liability",
+        description="Covers claims of wrongful termination, discrimination, and harassment",
+        importance="important",
+        typical_sources=["epli"]
+    ),
 }
 
 
@@ -267,6 +318,7 @@ def get_policy_coverages(policy_type: str) -> list[str]:
     policy_type = (policy_type or "").lower()
 
     coverage_map = {
+        # Personal
         "auto": ["auto_liability", "auto_collision", "auto_comprehensive", "medical_payments", "uninsured_motorist"],
         "home": ["dwelling_coverage", "personal_property", "home_liability", "medical_payments"],
         "renters": ["personal_property", "home_liability"],
@@ -274,7 +326,19 @@ def get_policy_coverages(policy_type: str) -> list[str]:
         "umbrella": ["umbrella_liability"],
         "liability": ["umbrella_liability"],
         "disability": ["disability_income"],
-        "workers_comp": [],  # Business coverage
+        "flood": [],
+        "earthquake": [],
+        # Business
+        "workers_comp": [],
+        "general_liability": ["general_liability"],
+        "professional_liability": ["professional_liability"],
+        "commercial_property": ["commercial_property"],
+        "commercial_auto": ["commercial_auto_liability"],
+        "cyber": ["cyber_liability"],
+        "bop": ["general_liability", "commercial_property"],
+        "directors_officers": ["directors_officers"],
+        "epli": ["employment_practices"],
+        "inland_marine": [],
     }
 
     return coverage_map.get(policy_type, [])
@@ -366,6 +430,50 @@ def analyze_coverage_gaps(
                 "description": "No umbrella/excess liability policy.",
                 "recommendation": "An umbrella policy provides additional liability coverage above your auto and home limits. Protects your assets from lawsuits.",
                 "category": "umbrella_liability"
+            })
+
+    # Business gap analysis
+    business_types = {"general_liability", "professional_liability", "commercial_property",
+                      "commercial_auto", "cyber", "bop", "directors_officers", "epli",
+                      "inland_marine", "workers_comp"}
+    has_business_policies = bool(policy_types & business_types)
+
+    if has_business_policies:
+        if "general_liability" not in policy_types and "bop" not in policy_types:
+            gaps.append({
+                "id": "no_gl",
+                "name": "No General Liability",
+                "severity": "high",
+                "description": "No general liability or BOP policy on file. GL is the foundation of business insurance.",
+                "recommendation": "General liability covers third-party injury and property damage claims. Required by most contracts and leases.",
+                "category": "general_liability"
+            })
+        if "cyber" not in policy_types:
+            gaps.append({
+                "id": "no_cyber",
+                "name": "No Cyber Coverage",
+                "severity": "medium",
+                "description": "No cyber liability policy on file.",
+                "recommendation": "Cyber insurance covers data breaches, ransomware, and response costs. A growing risk for all businesses.",
+                "category": "cyber_liability"
+            })
+        if "epli" not in policy_types and "workers_comp" in policy_types:
+            gaps.append({
+                "id": "no_epli",
+                "name": "No Employment Practices Liability",
+                "severity": "medium",
+                "description": "You have workers' comp but no EPLI coverage.",
+                "recommendation": "EPLI covers wrongful termination, discrimination, and harassment claims — risks not covered by workers' comp.",
+                "category": "employment_practices"
+            })
+        if "professional_liability" not in policy_types:
+            gaps.append({
+                "id": "no_professional_liability",
+                "name": "Professional Liability (E&O)",
+                "severity": "info",
+                "description": "No professional liability policy on file.",
+                "recommendation": "If your business provides professional services or advice, E&O insurance protects against negligence claims.",
+                "category": "professional_liability"
             })
 
     # Low auto liability
@@ -483,7 +591,7 @@ def analyze_coverage_gaps(
     for policy in policies:
         if not policy.get("coverage_amount") and policy.get("carrier") != "Pending extraction...":
             ptype = policy.get("policy_type", "")
-            if ptype in ("auto", "home", "umbrella", "liability"):
+            if ptype in ("auto", "home", "umbrella", "liability", "general_liability", "professional_liability", "commercial_property", "cyber"):
                 gaps.append({
                     "id": f"unknown_coverage_{policy.get('id')}",
                     "name": "Unknown Coverage Limit",

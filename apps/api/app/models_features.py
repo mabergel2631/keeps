@@ -184,3 +184,39 @@ class PolicyDraft(Base):
     object_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "approved", "rejected"
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class Certificate(Base):
+    """Certificate of Insurance (COI) tracking - issued and received."""
+    __tablename__ = "certificates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    direction: Mapped[str] = mapped_column(String(10))  # "issued" or "received"
+    policy_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("policies.id", ondelete="SET NULL"), nullable=True, index=True)
+    counterparty_name: Mapped[str] = mapped_column(String(200))
+    counterparty_type: Mapped[str] = mapped_column(String(50))  # landlord, lender, client, vendor, contractor, tenant, property_manager, other
+    counterparty_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    carrier: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    policy_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    coverage_types: Mapped[str | None] = mapped_column(String(500), nullable=True)  # comma-separated
+    coverage_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    additional_insured: Mapped[bool] = mapped_column(Boolean, default=False)
+    waiver_of_subrogation: Mapped[bool] = mapped_column(Boolean, default=False)
+    minimum_coverage: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    effective_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    expiration_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")  # active, expiring, expired, pending
+    notes: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class CertificateReminder(Base):
+    """Expiration reminders for certificates."""
+    __tablename__ = "certificate_reminders"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    certificate_id: Mapped[int] = mapped_column(Integer, ForeignKey("certificates.id", ondelete="CASCADE"), index=True)
+    remind_at: Mapped[Date] = mapped_column(Date)
+    dismissed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())

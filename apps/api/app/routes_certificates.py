@@ -1,0 +1,131 @@
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, delete
+from sqlalchemy.orm import Session
+
+from .auth import get_current_user
+from .db import get_db
+from .models import Policy, User
+from .models_features import Certificate, CertificateReminder
+from .schemas import CertificateCreate, CertificateUpdate
+from .audit_helper import log_action
+
+router = APIRouter(prefix="/certificates", tags=["certificates"])
+
+
+def ensure_certificate_reminders(certificate_id: int, expiration_date: date | None, db: Session):
+    """Delete old reminders and create new ones at 90/60/30 days before expiration."""
+    db.execute(delete(CertificateReminder).where(CertificateReminder.certificate_id == certificate_id))
+    if not expiration_date:
+        return
+    today = date.today()
+    for days_before in [90, 60, 30]:
+        remind_at = expiration_date - timedelta(days=days_before)
+        if remind_at >= today:
+            db.add(CertificateReminder(certificate_id=certificate_id, remind_at=remind_at))
+
+
+def _update_status(cert: Certificate, today: date):
+    """Auto-update status based on expiration date."""
+    if not cert.expiration_date:
+        return
+    days_until = (cert.expiration_date - today).days
+    if days_until < 0:
+        cert.status = "expired"
+    elif days_until <= 30:
+        cert.status = "expiring"
+    elif cert.status in ("expired", "expiring"):
+        cert.status = "active"
+
+
+def _enrich(cert: Certificate, db: Session) -> dict:
+    """Build response dict with joined policy info."""
+    policy_carrier = None
+    policy_type = None
+    if cert.policy_id:
+        policy = db.get(Policy, cert.policy_id)
+        if policy:
+            policy_carrier = policy.carrier
+            policy_type = policy.policy_type
+    return {
+        "id": cert.id,
+        "user_id": cert.user_id,
+        "direction": cert.direction,
+        "policy_id": cert.policy_id,
+        "counterparty_name": cert.counterparty_name,
+        "counterparty_type": cert.counterparty_type,
+        "counterparty_email": cert.counterparty_email,
+        "carrier": cert.carrier,
+        "policy_number": cert.policy_number,
+        "coverage_types": cert.coverage_types,
+        "coverage_amount": cert.coverage_amount,
+        "additional_insured": cert.additional_insured,
+        "waiver_of_subrogation": cert.waiver_of_subrogation,
+        "minimum_coverage": cert.minimum_coverage,
+        "effective_date": str(cert.effective_date) if cert.effective_date else None,
+        "expiration_date": str(cert.expiration_date) if cert.expiration_date else None,
+        "status": cert.status,
+        "notes": cert.notes,
+        "created_at": str(cert.created_at),
+        "policy_carrier": policy_carrier,
+        "policy_type": policy_type,
+    }
+
+
+@router.post("", status_code=201)
+def create_certificate(payload: CertificateCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    cert = Certificate(**payload.model_dump(), user_id=user.id)
+    db.add(cert)
+    db.flush()
+    ensure_certificate_reminders(cert.id, cert.expiration_date, db)
+    log_action(db, user.id, "created", "certificate", cert.id)
+    db.commit()
+    db.refresh(cert)
+    return _enrich(cert, db)
+
+
+@router.get("")
+def list_certificates(direction: str | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    q = select(Certificate).where(Certificate.user_id == user.id)
+    if direction:
+        q = q.where(Certificate.direction == direction)
+    certs = db.execute(q.order_by(Certificate.id.desc())).scalars().all()
+    today = date.today()
+    for c in certs:
+        _update_status(c, today)
+    db.commit()
+    return [_enrich(c, db) for c in certs]
+
+
+@router.get("/{cert_id}")
+def get_certificate(cert_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    cert = db.get(Certificate, cert_id)
+    if not cert or cert.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    return _enrich(cert, db)
+
+
+@router.put("/{cert_id}")
+def update_certificate(cert_id: int, payload: CertificateUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    cert = db.get(Certificate, cert_id)
+    if not cert or cert.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(cert, field, value)
+    ensure_certificate_reminders(cert.id, cert.expiration_date, db)
+    log_action(db, user.id, "updated", "certificate", cert.id)
+    db.commit()
+    db.refresh(cert)
+    return _enrich(cert, db)
+
+
+@router.delete("/{cert_id}")
+def delete_certificate(cert_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    cert = db.get(Certificate, cert_id)
+    if not cert or cert.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    log_action(db, user.id, "deleted", "certificate", cert.id)
+    db.delete(cert)
+    db.commit()
+    return {"ok": True}

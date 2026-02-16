@@ -14,15 +14,33 @@ const DOC_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-const POLICY_TYPES = ['auto', 'home', 'life', 'liability', 'umbrella', 'workers_comp', 'other'];
+const POLICY_TYPES = [
+  'auto', 'home', 'renters', 'life', 'disability', 'flood', 'earthquake',
+  'liability', 'umbrella',
+  'general_liability', 'professional_liability', 'commercial_property', 'commercial_auto',
+  'cyber', 'bop', 'workers_comp', 'directors_officers', 'epli', 'inland_marine', 'other',
+];
 
 const SUGGESTED_FIELDS: Record<string, string[]> = {
   auto: ['vehicle_1_description', 'vehicle_1_VIN', 'vehicle_2_description', 'vehicle_2_VIN', 'listed_drivers', 'garaging_address', 'usage_type', 'liability_limit'],
   home: ['year_built', 'square_footage', 'construction_type', 'roof_type', 'roof_age', 'stories', 'alarm_system', 'sprinkler_system', 'swimming_pool', 'replacement_cost'],
+  renters: ['personal_property_limit', 'liability_limit', 'loss_of_use_limit', 'replacement_cost'],
   life: ['insured_name', 'beneficiary', 'face_value', 'term_length', 'cash_value'],
+  disability: ['benefit_amount', 'benefit_period', 'elimination_period', 'own_occupation', 'residual_benefit'],
+  flood: ['flood_zone', 'building_coverage', 'contents_coverage', 'elevated_structure', 'basement_coverage'],
+  earthquake: ['dwelling_limit', 'personal_property_limit', 'deductible_percentage', 'loss_of_use_limit'],
   liability: ['underlying_policies', 'aggregate_limit', 'per_occurrence_limit'],
   umbrella: ['underlying_policies', 'aggregate_limit', 'per_occurrence_limit'],
+  general_liability: ['aggregate_limit', 'per_occurrence_limit', 'products_completed_ops', 'personal_advertising_injury', 'damage_to_rented_premises', 'medical_payments'],
+  professional_liability: ['per_claim_limit', 'aggregate_limit', 'retroactive_date', 'tail_coverage', 'covered_services'],
+  commercial_property: ['building_limit', 'bpp_limit', 'business_income_limit', 'coinsurance_percentage', 'valuation_method', 'equipment_breakdown'],
+  commercial_auto: ['vehicle_schedule', 'combined_single_limit', 'hired_auto', 'non_owned_auto', 'cargo_coverage'],
+  cyber: ['first_party_limit', 'third_party_limit', 'ransomware_coverage', 'business_interruption', 'data_breach_response', 'social_engineering'],
+  bop: ['building_limit', 'bpp_limit', 'liability_limit', 'business_income_limit'],
   workers_comp: ['business_name', 'classification_code', 'payroll_amount', 'experience_modifier', 'state'],
+  directors_officers: ['per_claim_limit', 'aggregate_limit', 'side_a_coverage', 'entity_coverage', 'securities_claim'],
+  epli: ['per_claim_limit', 'aggregate_limit', 'third_party_coverage', 'wage_hour_coverage', 'retroactive_date'],
+  inland_marine: ['scheduled_equipment', 'blanket_limit', 'transit_coverage', 'installation_coverage'],
 };
 
 export default function PolicyDetailPage() {

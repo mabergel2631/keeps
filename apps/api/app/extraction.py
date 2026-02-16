@@ -16,7 +16,7 @@ Return ONLY valid JSON with this exact schema (use null for missing fields):
 {
   "carrier": "string or null - the full, correct insurance company name (e.g. 'State Farm Mutual Automobile Insurance Company', 'Allstate Insurance Company')",
   "policy_number": "string or null - the policy number, certificate number, or policy ID",
-  "policy_type": "string or null - one of: auto, home, life, liability, umbrella, workers_comp, other",
+  "policy_type": "string or null - one of: auto, home, renters, life, disability, flood, earthquake, liability, umbrella, workers_comp, general_liability, professional_liability, commercial_property, commercial_auto, cyber, bop, directors_officers, epli, inland_marine, other",
   "scope": "string or null - personal or business",
   "coverage_amount": "integer or null - the COVERAGE LIMIT (max payout), NOT the premium. For auto this is the liability limit. For home this is the dwelling coverage. Example: 300000 for $300k coverage",
   "deductible": "integer or null - primary deductible in dollars",
@@ -74,6 +74,19 @@ CRITICAL INSTRUCTIONS:
    - life: insured_name, beneficiary, contingent_beneficiary, face_value, term_length, cash_value, policy_owner, policy_subtype (e.g. "Term Life", "Whole Life", "Universal Life")
    - liability/umbrella: underlying_policies, aggregate_limit, per_occurrence_limit, employer_liability_limit
    - workers_comp: business_name, classification_code, payroll_amount, experience_modifier, state, employer_liability_limit
+   - renters: personal_property_limit, liability_limit, loss_of_use, landlord_name, lease_end_date
+   - flood: flood_zone, building_coverage, contents_coverage, waiting_period, nfip_or_private
+   - earthquake: dwelling_coverage, deductible_percent, foundation_type
+   - disability: benefit_amount, benefit_period, elimination_period, own_occupation, definition_of_disability
+   - general_liability: aggregate_limit, per_occurrence_limit, products_completed_ops, medical_payments, fire_damage_limit
+   - professional_liability: aggregate_limit, per_claim_limit, retroactive_date, profession, claims_made_vs_occurrence
+   - commercial_property: building_value, business_personal_property, business_income_limit, extra_expense, coinsurance_pct
+   - commercial_auto: liability_limit, fleet_size, hired_non_owned, cargo_coverage, scheduled_autos
+   - cyber: first_party_limit, third_party_limit, ransomware_coverage, social_engineering_limit, regulatory_defense, breach_notification_costs
+   - bop: property_limit, liability_limit, business_income_limit, industry_class
+   - directors_officers: aggregate_limit, per_claim_limit, entity_coverage, side_a_b_c
+   - epli: aggregate_limit, per_claim_limit, third_party_coverage, wage_hour
+   - inland_marine: scheduled_equipment, blanket_limit, transit_coverage
    Also extract: additional_insured, mortgage_company, lienholder, loss_payee — any entity with a financial interest
 
 5. Be extremely thorough. It is better to extract too much than too little.

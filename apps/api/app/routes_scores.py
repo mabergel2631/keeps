@@ -45,6 +45,29 @@ SCORING_WEIGHTS = {
         "has_policy": 50,
         "limit_adequate": 50,  # >= $1M
     },
+    # Business types
+    "general_liability": {
+        "has_policy": 40,
+        "limit_adequate": 35,  # >= $1M per occurrence
+        "aggregate_adequate": 25,  # >= $2M aggregate
+    },
+    "professional_liability": {
+        "has_policy": 50,
+        "limit_adequate": 50,
+    },
+    "commercial_property": {
+        "has_policy": 50,
+        "coverage_adequate": 50,
+    },
+    "cyber": {
+        "has_policy": 60,
+        "limit_adequate": 40,
+    },
+    "renters": {
+        "has_policy": 50,
+        "property_adequate": 30,
+        "liability": 20,
+    },
 }
 
 # Thresholds for adequate coverage
@@ -52,6 +75,10 @@ ADEQUACY_THRESHOLDS = {
     "auto_liability": 100000,
     "umbrella_limit": 1000000,
     "home_dwelling": 250000,  # Minimum recommended
+    "gl_per_occurrence": 1000000,
+    "gl_aggregate": 2000000,
+    "professional_liability": 1000000,
+    "cyber_limit": 1000000,
 }
 
 
@@ -161,6 +188,32 @@ def calculate_category_score(policies: list[dict], category: str, all_details: d
                 breakdown["limit_adequate"] = int(weights["limit_adequate"] * (max_limit / ADEQUACY_THRESHOLDS["umbrella_limit"]))
                 insights.append("Consider $1M+ umbrella coverage")
 
+    elif category == "general_liability":
+        max_coverage = max((p.get("coverage_amount") or 0) for p in cat_policies)
+        if "limit_adequate" in weights:
+            threshold = ADEQUACY_THRESHOLDS["gl_per_occurrence"]
+            if max_coverage >= threshold:
+                breakdown["limit_adequate"] = weights["limit_adequate"]
+            else:
+                breakdown["limit_adequate"] = int(weights["limit_adequate"] * min(1.0, max_coverage / threshold))
+                insights.append("Consider $1M+ per-occurrence GL limit")
+        breakdown["aggregate_adequate"] = weights.get("aggregate_adequate", 0)  # Assume adequate if policy exists
+
+    elif category in ("professional_liability", "commercial_property", "cyber"):
+        max_coverage = max((p.get("coverage_amount") or 0) for p in cat_policies)
+        threshold = ADEQUACY_THRESHOLDS.get(f"{category}_limit", ADEQUACY_THRESHOLDS.get(category, 1000000))
+        if "limit_adequate" in weights:
+            if max_coverage >= threshold:
+                breakdown["limit_adequate"] = weights["limit_adequate"]
+            else:
+                breakdown["limit_adequate"] = int(weights["limit_adequate"] * min(1.0, max_coverage / threshold)) if max_coverage > 0 else int(weights["limit_adequate"] * 0.5)
+        if "coverage_adequate" in weights:
+            breakdown["coverage_adequate"] = weights["coverage_adequate"] if max_coverage > 0 else int(weights["coverage_adequate"] * 0.5)
+
+    elif category == "renters":
+        breakdown["property_adequate"] = weights.get("property_adequate", 0)
+        breakdown["liability"] = weights.get("liability", 0)
+
     score = (sum(breakdown.values()) / total_weight) * 100 if total_weight > 0 else 0
     return {"score": round(score), "breakdown": breakdown, "insights": insights}
 
@@ -174,6 +227,10 @@ def calculate_overall_score(category_scores: dict) -> dict:
         "life": 20,
         "umbrella": 15,
         "renters": 15,  # Alternative to home
+        "general_liability": 20,
+        "professional_liability": 15,
+        "commercial_property": 15,
+        "cyber": 15,
     }
 
     total_weight = 0
@@ -231,7 +288,7 @@ def get_coverage_scores(
         all_details[p.id] = {d.field_name.lower(): d.field_value for d in details}
 
     # Calculate scores for each category
-    categories = ["auto", "home", "life", "umbrella"]
+    categories = ["auto", "home", "life", "umbrella", "general_liability", "professional_liability", "commercial_property", "cyber"]
     category_scores = {}
 
     for cat in categories:

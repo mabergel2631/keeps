@@ -8,6 +8,7 @@ import { APP_NAME } from '../config';
 const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: '🏠' },
   { href: '/policies', label: 'Policies', icon: '📋' },
+  { href: '/certificates', label: 'Certificates', icon: '📜' },
   { href: '/emergency', label: 'Emergency', icon: '🚨', urgent: true },
   { href: '/audit', label: 'Alerts', icon: '🔔' },
   { href: '/policies/compare', label: 'Compare', icon: '⚖️' },

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from .auth import get_current_user
 from .db import get_db
 from .models import Policy, User
-from .models_features import RenewalReminder, Premium
+from .models_features import RenewalReminder, Premium, Certificate
 
 
 def to_date(val) -> date | None:
@@ -160,6 +160,36 @@ def smart_reminders(db: Session = Depends(get_db), user: User = Depends(get_curr
                     "description": "It's been about a year. Review coverage, limits, and beneficiaries.",
                     "action": "Review policy details",
                 })
+
+    # Certificate expiration alerts
+    certificates = db.execute(
+        select(Certificate).where(Certificate.user_id == user.id)
+    ).scalars().all()
+    for cert in certificates:
+        exp = to_date(cert.expiration_date)
+        if not exp:
+            continue
+        days_until = (exp - today).days
+        label = f"{cert.counterparty_name} ({cert.direction} COI)"
+        if days_until < 0 and days_until > -90:
+            alerts.append({
+                "type": "certificate_expired",
+                "severity": "high",
+                "policy_id": cert.policy_id or 0,
+                "title": f"COI expired: {label}",
+                "description": f"Expired {abs(days_until)} days ago. Request updated certificate.",
+                "action": "Request updated COI",
+            })
+        elif 0 <= days_until <= 90:
+            sev = "high" if days_until <= 30 else "medium" if days_until <= 60 else "low"
+            alerts.append({
+                "type": "certificate_expiring",
+                "severity": sev,
+                "policy_id": cert.policy_id or 0,
+                "title": f"COI expiring: {label}",
+                "description": f"Expires in {days_until} days.",
+                "action": "Request renewal or updated COI",
+            })
 
     # Sort by severity
     severity_order = {"high": 0, "medium": 1, "low": 2}

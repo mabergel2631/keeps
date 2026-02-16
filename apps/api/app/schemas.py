@@ -318,3 +318,68 @@ class ExposureOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ── Certificates ──────────────────────────────────
+
+class CertificateCreate(BaseModel):
+    direction: str  # "issued" or "received"
+    policy_id: Optional[int] = None
+    counterparty_name: str
+    counterparty_type: str
+    counterparty_email: Optional[str] = None
+    carrier: Optional[str] = None
+    policy_number: Optional[str] = None
+    coverage_types: Optional[str] = None
+    coverage_amount: Optional[int] = None
+    additional_insured: bool = False
+    waiver_of_subrogation: bool = False
+    minimum_coverage: Optional[int] = None
+    effective_date: Optional[date] = None
+    expiration_date: Optional[date] = None
+    status: Optional[str] = "active"
+    notes: Optional[str] = None
+
+
+class CertificateUpdate(BaseModel):
+    direction: Optional[str] = None
+    policy_id: Optional[int] = None
+    counterparty_name: Optional[str] = None
+    counterparty_type: Optional[str] = None
+    counterparty_email: Optional[str] = None
+    carrier: Optional[str] = None
+    policy_number: Optional[str] = None
+    coverage_types: Optional[str] = None
+    coverage_amount: Optional[int] = None
+    additional_insured: Optional[bool] = None
+    waiver_of_subrogation: Optional[bool] = None
+    minimum_coverage: Optional[int] = None
+    effective_date: Optional[date] = None
+    expiration_date: Optional[date] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class CertificateOut(BaseModel):
+    id: int
+    user_id: int
+    direction: str
+    policy_id: Optional[int] = None
+    counterparty_name: str
+    counterparty_type: str
+    counterparty_email: Optional[str] = None
+    carrier: Optional[str] = None
+    policy_number: Optional[str] = None
+    coverage_types: Optional[str] = None
+    coverage_amount: Optional[int] = None
+    additional_insured: bool
+    waiver_of_subrogation: bool
+    minimum_coverage: Optional[int] = None
+    effective_date: Optional[date] = None
+    expiration_date: Optional[date] = None
+    status: str
+    notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

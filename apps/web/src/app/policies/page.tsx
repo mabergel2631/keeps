@@ -8,17 +8,33 @@ import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { APP_NAME } from '../config';
 
-const POLICY_TYPES = ['auto', 'home', 'life', 'liability', 'umbrella', 'workers_comp', 'other'];
-
-const POLICY_TYPE_CONFIG: Record<string, { icon: string; label: string }> = {
-  auto: { icon: '🚗', label: 'Auto' },
-  home: { icon: '🏠', label: 'Home' },
-  life: { icon: '❤️', label: 'Life' },
-  liability: { icon: '🛡️', label: 'Liability' },
-  umbrella: { icon: '☂️', label: 'Umbrella' },
-  workers_comp: { icon: '👷', label: 'Workers Comp' },
-  other: { icon: '📋', label: 'Other' },
+const POLICY_TYPE_CONFIG: Record<string, { icon: string; label: string; group: 'personal' | 'business' | 'both' }> = {
+  // Personal
+  auto: { icon: '🚗', label: 'Auto', group: 'personal' },
+  home: { icon: '🏠', label: 'Home', group: 'personal' },
+  renters: { icon: '🏢', label: 'Renters', group: 'personal' },
+  life: { icon: '❤️', label: 'Life', group: 'personal' },
+  disability: { icon: '🩼', label: 'Disability', group: 'personal' },
+  flood: { icon: '🌊', label: 'Flood', group: 'personal' },
+  earthquake: { icon: '🌋', label: 'Earthquake', group: 'personal' },
+  // Both
+  liability: { icon: '🛡️', label: 'Liability', group: 'both' },
+  umbrella: { icon: '☂️', label: 'Umbrella', group: 'both' },
+  // Business
+  general_liability: { icon: '🛡️', label: 'General Liability', group: 'business' },
+  professional_liability: { icon: '💼', label: 'Professional (E&O)', group: 'business' },
+  commercial_property: { icon: '🏭', label: 'Commercial Property', group: 'business' },
+  commercial_auto: { icon: '🚚', label: 'Commercial Auto', group: 'business' },
+  cyber: { icon: '💻', label: 'Cyber Liability', group: 'business' },
+  bop: { icon: '📦', label: "Business Owner's", group: 'business' },
+  workers_comp: { icon: '👷', label: 'Workers Comp', group: 'business' },
+  directors_officers: { icon: '👔', label: 'Directors & Officers', group: 'business' },
+  epli: { icon: '👥', label: 'Employment Practices', group: 'business' },
+  inland_marine: { icon: '📦', label: 'Inland Marine', group: 'business' },
+  other: { icon: '📋', label: 'Other', group: 'both' },
 };
+
+const POLICY_TYPES = Object.keys(POLICY_TYPE_CONFIG);
 
 export default function PoliciesPage() {
   const { token, logout } = useAuth();
@@ -1173,7 +1189,7 @@ export default function PoliciesPage() {
                 <button onClick={() => setWizardStep(wizardData.scope === 'business' ? 15 : 1)} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
                 <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', marginBottom: 20 }}>What type of insurance?</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                  {Object.entries(POLICY_TYPE_CONFIG).map(([key, cfg]) => (
+                  {Object.entries(POLICY_TYPE_CONFIG).filter(([, cfg]) => cfg.group === 'both' || cfg.group === (wizardData.scope || 'personal')).map(([key, cfg]) => (
                     <button
                       key={key}
                       onClick={() => { setWizardData(d => ({ ...d, policy_type: key })); setWizardStep(wizardMethod === 'url' ? 4 : 3); }}
