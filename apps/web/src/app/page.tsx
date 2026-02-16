@@ -84,7 +84,7 @@ export default function Home() {
             letterSpacing: 'var(--letter-spacing-tight)',
             fontFamily: 'var(--font-heading)',
           }}>
-            Your coverage, finally clear.
+            All your coverage, organized and understood.
           </h1>
           <p style={{ fontSize: 18, opacity: 0.95, margin: '0 0 8px', lineHeight: 1.7, maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', fontWeight: 500 }}>
             {APP_NAME} reads your policies, tracks what changed, finds what&apos;s missing, and keeps the right people informed — so you always know where you stand.
