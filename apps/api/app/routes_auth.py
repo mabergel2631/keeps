@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .auth import hash_password, verify_password, create_access_token
+from .auth import hash_password, verify_password, create_access_token, get_current_user
 from .config import settings
 from .db import get_db
 from .email import send_reset_email
@@ -129,3 +129,8 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     reset.used = True
     db.commit()
     return {"ok": True}
+
+
+@router.get("/me")
+def get_me(user: User = Depends(get_current_user)):
+    return {"id": user.id, "email": user.email, "role": user.role}

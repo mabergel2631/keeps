@@ -122,7 +122,16 @@ export type DocMeta = {
 
 // ── Auth API ─────────────────────────────────────────
 
+export type AuthMe = {
+  id: number;
+  email: string;
+  role: string;
+};
+
 export const authApi = {
+  me() {
+    return request<AuthMe>("/auth/me");
+  },
   register(email: string, password: string) {
     return request<{ access_token: string; token_type: string }>("/auth/register", {
       method: "POST",
@@ -925,5 +934,55 @@ export const inboundApi = {
   },
   countPending(): Promise<{ count: number }> {
     return request<{ count: number }>("/inbound/drafts/count");
+  },
+};
+
+// ── Agent / Advisor API ─────────────────────────────────────
+
+export type AgentClient = {
+  id: number;
+  email: string;
+  policy_count: number;
+  protection_score: number | null;
+  next_renewal: string | null;
+};
+
+export type AgentOverview = {
+  total_clients: number;
+  total_policies: number;
+  avg_protection_score: number | null;
+  upcoming_renewals: number;
+};
+
+export type AgentClientPolicy = {
+  id: number;
+  carrier: string;
+  policy_type: string;
+  policy_number: string;
+  nickname?: string | null;
+  coverage_amount?: number | null;
+  deductible?: number | null;
+  premium_amount?: number | null;
+  renewal_date?: string | null;
+};
+
+export type AgentClientSummary = {
+  client: { id: number; email: string };
+  protection_score: number | null;
+  policies: AgentClientPolicy[];
+  gaps: CoverageGap[];
+  summary: CoverageSummary;
+  upcoming_renewals: { policy_id: number; carrier: string; policy_type: string; renewal_date: string }[];
+};
+
+export const agentApi = {
+  clients(): Promise<AgentClient[]> {
+    return request<AgentClient[]>("/agent/clients");
+  },
+  overview(): Promise<AgentOverview> {
+    return request<AgentOverview>("/agent/overview");
+  },
+  clientSummary(clientId: number): Promise<AgentClientSummary> {
+    return request<AgentClientSummary>(`/agent/clients/${clientId}/summary`);
   },
 };

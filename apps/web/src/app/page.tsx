@@ -294,35 +294,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. AUDIENCE */}
-      <section style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
-            Built for people who want to know — not guess
+      {/* 8. FOR ADVISORS */}
+      <section id="advisors" style={{ padding: '80px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
+            Work with an advisor? Even better.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 32 }}>
-            <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>&#x1F468;&#x200D;&#x1F469;&#x200D;&#x1F467;&#x200D;&#x1F466;</div>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Families</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Know your family is fully protected — with AI watching for gaps, upcoming renewals, and changes you need to act on.
-              </p>
-            </div>
-            <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>&#x1F4BC;</div>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Professionals</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Protection Score and gap analysis across personal and business policies — so nothing falls through the cracks.
-              </p>
-            </div>
-            <div className="card" style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>&#x1F4CB;</div>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Multi-policy holders</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                The more policies you have, the harder it is to stay on top. {APP_NAME} handles the complexity — you just stay protected.
-              </p>
-            </div>
-          </div>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 24px', lineHeight: 1.8 }}>
+            Share access with your agent, attorney, or financial advisor. They see your coverage intelligence and can help you act on it — scores, gaps, renewals, and recommendations all in one place.
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.7, fontStyle: 'italic' }}>
+            Advisors: your clients can invite you. You&apos;ll see their scores, gaps, and renewals in one dashboard.
+          </p>
         </div>
       </section>
 

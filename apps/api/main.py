@@ -32,6 +32,7 @@ from app.routes_premium_history import router as premium_history_router
 from app.routes_deltas import router as deltas_router
 from app.routes_scores import router as scores_router
 from app.routes_inbound import router as inbound_router
+from app.routes_agent import router as agent_router
 
 app = FastAPI(title="Covrabl API")
 
@@ -82,6 +83,11 @@ def on_startup():
                 conn.execute(text("ALTER TABLE policies ADD COLUMN premium_amount INTEGER"))
             if "business_name" not in cols:
                 conn.execute(text("ALTER TABLE policies ADD COLUMN business_name VARCHAR(200)"))
+    if "users" in insp.get_table_names():
+        user_cols = [c["name"] for c in insp.get_columns("users")]
+        with engine.begin() as conn:
+            if "role" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'individual'"))
     if "policy_shares" in insp.get_table_names():
         share_cols = [c["name"] for c in insp.get_columns("policy_shares")]
         with engine.begin() as conn:
@@ -112,3 +118,4 @@ app.include_router(premium_history_router)
 app.include_router(deltas_router)
 app.include_router(scores_router)
 app.include_router(inbound_router)
+app.include_router(agent_router)
