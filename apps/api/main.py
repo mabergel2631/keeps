@@ -39,6 +39,7 @@ from app.routes_certificates import router as certificates_router
 app = FastAPI(title="Covrabl API")
 
 ALLOWED_ORIGINS = [
+    "https://covrabl.vercel.app",
     "https://keeps-jet.vercel.app",
     "https://keeps-app-six.vercel.app",
     "http://localhost:3000",

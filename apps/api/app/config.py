@@ -2,11 +2,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./keeps.db"
+    database_url: str = "sqlite:///./covrabl.db"
     s3_endpoint: str = "localhost:9000"
     s3_access_key: str = ""
     s3_secret_key: str = ""
-    s3_bucket: str = "keeps"
+    s3_bucket: str = "covrabl"
 
     jwt_key: str = "default-secret-change-in-production"
     jwt_algorithm: str = "HS256"

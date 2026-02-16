@@ -1,5 +1,5 @@
 {
-  "name": "keeps-web",
+  "name": "covrabl-web",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
