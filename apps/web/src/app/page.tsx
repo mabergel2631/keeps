@@ -177,36 +177,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          4. OWN YOUR COVERAGE (what you get)
+          4. HOW IT WORKS
       ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', textAlign: 'center', color: 'var(--color-text)' }}>
-            One place for everything you&apos;re covered for
-          </h2>
-          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', textAlign: 'center', lineHeight: 1.7, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
-            Insurance information is fragmented across carrier portals, emails, and files you rarely revisit. {APP_NAME} gives you a single, structured view you control.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
-            {[
-              { title: 'Structured policy data', desc: 'Every policy organized with limits, deductibles, renewal dates, and contacts — not buried in PDFs.' },
-              { title: 'Coverage intelligence', desc: 'Gaps, overlaps, and changes surfaced automatically. Not just storage — understanding.' },
-              { title: 'Controlled access', desc: 'You decide who sees what. Share with family, advisors, or emergency contacts on your terms.' },
-              { title: 'Always current', desc: 'Renewal tracking, status monitoring, and change detection keep your view up to date.' },
-            ].map(item => (
-              <div key={item.title} className="card" style={{ padding: 24 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{item.title}</h3>
-                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          5. HOW IT WORKS
-      ═══════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+      <section id="how-it-works" style={{ padding: '80px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
             How it works
@@ -233,6 +206,33 @@ export default function Home() {
                 Proactive alerts before renewals, when gaps appear, and when something changes. Share safely with anyone who needs access.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          5. OWN YOUR COVERAGE (what you get)
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', textAlign: 'center', color: 'var(--color-text)' }}>
+            One place for everything you&apos;re covered for
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', textAlign: 'center', lineHeight: 1.7, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+            Insurance information is fragmented across carrier portals, emails, and files you rarely revisit. {APP_NAME} gives you a single, structured view you control.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+            {[
+              { title: 'Structured policy data', desc: 'Every policy organized with limits, deductibles, renewal dates, and contacts — not buried in PDFs.' },
+              { title: 'Coverage intelligence', desc: 'Gaps, overlaps, and changes surfaced automatically. Not just storage — understanding.' },
+              { title: 'Controlled access', desc: 'You decide who sees what. Share with family, advisors, or emergency contacts on your terms.' },
+              { title: 'Always current', desc: 'Renewal tracking, status monitoring, and change detection keep your view up to date.' },
+            ].map(item => (
+              <div key={item.title} className="card" style={{ padding: 24 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{item.title}</h3>
+                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
