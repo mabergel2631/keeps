@@ -117,6 +117,115 @@ def _build_policy_data(db: Session, user_id: int) -> list[dict]:
     return policy_data
 
 
+@router.get("/business/{business_name}")
+def get_business_entity_gaps(
+    business_name: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Analyze coverage gaps scoped to a single business entity (by business_name)."""
+    from urllib.parse import unquote
+    from .models_features import Certificate
+
+    decoded_name = unquote(business_name)
+
+    policies = db.execute(
+        select(Policy).where(
+            Policy.user_id == user.id,
+            Policy.business_name == decoded_name,
+        )
+    ).scalars().all()
+
+    if not policies:
+        raise HTTPException(status_code=404, detail="No policies found for this business entity")
+
+    policy_data = []
+    policy_list = []
+    all_contacts = []
+
+    for p in policies:
+        details = db.execute(
+            select(PolicyDetail).where(PolicyDetail.policy_id == p.id)
+        ).scalars().all()
+        contacts = db.execute(
+            select(Contact).where(Contact.policy_id == p.id)
+        ).scalars().all()
+
+        policy_data.append({
+            "id": p.id,
+            "policy_type": p.policy_type,
+            "carrier": p.carrier,
+            "policy_number": p.policy_number,
+            "coverage_amount": p.coverage_amount,
+            "deductible": p.deductible,
+            "premium_amount": p.premium_amount,
+            "renewal_date": str(p.renewal_date) if p.renewal_date else None,
+            "created_at": str(p.created_at) if p.created_at else None,
+            "details": [{"field_name": d.field_name, "field_value": d.field_value} for d in details],
+            "contacts": [{"role": c.role, "phone": c.phone, "email": c.email} for c in contacts],
+        })
+
+        policy_list.append({
+            "id": p.id,
+            "carrier": p.carrier,
+            "policy_type": p.policy_type,
+            "policy_number": p.policy_number,
+            "nickname": p.nickname,
+            "business_name": p.business_name,
+            "coverage_amount": p.coverage_amount,
+            "deductible": p.deductible,
+            "premium_amount": p.premium_amount,
+            "status": p.status or "active",
+            "renewal_date": str(p.renewal_date) if p.renewal_date else None,
+        })
+
+        for c in contacts:
+            all_contacts.append({
+                "id": c.id,
+                "policy_id": c.policy_id,
+                "role": c.role,
+                "name": c.name,
+                "company": c.company,
+                "phone": c.phone,
+                "email": c.email,
+                "notes": c.notes,
+            })
+
+    gaps = analyze_coverage_gaps(policy_data, {})
+    summary = get_coverage_summary(policy_data)
+
+    # Certificates linked to this entity's policies
+    policy_ids = [p.id for p in policies]
+    certificates = db.execute(
+        select(Certificate).where(
+            Certificate.user_id == user.id,
+            Certificate.policy_id.in_(policy_ids),
+        )
+    ).scalars().all()
+
+    cert_list = [{
+        "id": cert.id,
+        "policy_id": cert.policy_id,
+        "direction": cert.direction,
+        "counterparty_name": cert.counterparty_name,
+        "counterparty_type": cert.counterparty_type,
+        "carrier": cert.carrier,
+        "coverage_types": cert.coverage_types,
+        "coverage_amount": cert.coverage_amount,
+        "status": cert.status,
+        "expiration_date": str(cert.expiration_date) if cert.expiration_date else None,
+    } for cert in certificates]
+
+    return {
+        "business_name": decoded_name,
+        "policies": policy_list,
+        "gaps": gaps,
+        "summary": summary,
+        "contacts": all_contacts,
+        "certificates": cert_list,
+    }
+
+
 @router.get("/policy/{policy_id}")
 def get_policy_gaps(policy_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Get gaps specific to a single policy."""

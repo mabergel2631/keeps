@@ -674,6 +674,47 @@ export type GapAnalysisResult = {
   policy_count: number;
 };
 
+export type BusinessEntityDetail = {
+  business_name: string;
+  policies: {
+    id: number;
+    carrier: string;
+    policy_type: string;
+    policy_number: string;
+    nickname?: string | null;
+    business_name?: string | null;
+    coverage_amount?: number | null;
+    deductible?: number | null;
+    premium_amount?: number | null;
+    status?: string;
+    renewal_date?: string | null;
+  }[];
+  gaps: CoverageGap[];
+  summary: CoverageSummary;
+  contacts: {
+    id: number;
+    policy_id: number;
+    role: string;
+    name?: string | null;
+    company?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    notes?: string | null;
+  }[];
+  certificates: {
+    id: number;
+    policy_id: number;
+    direction: string;
+    counterparty_name: string;
+    counterparty_type: string;
+    carrier?: string | null;
+    coverage_types?: string | null;
+    coverage_amount?: number | null;
+    status: string;
+    expiration_date?: string | null;
+  }[];
+};
+
 export const gapsApi = {
   analyze(): Promise<GapAnalysisResult> {
     return request<GapAnalysisResult>("/gaps");
@@ -683,6 +724,9 @@ export const gapsApi = {
   },
   forPolicy(policyId: number): Promise<{ gaps: CoverageGap[]; policy_id: number }> {
     return request<{ gaps: CoverageGap[]; policy_id: number }>(`/gaps/policy/${policyId}`);
+  },
+  forBusiness(businessName: string): Promise<BusinessEntityDetail> {
+    return request<BusinessEntityDetail>(`/gaps/business/${encodeURIComponent(businessName)}`);
   },
 };
 
