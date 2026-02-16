@@ -170,66 +170,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. CORE VALUE — Five ways Covrabl thinks about your insurance */}
-      <section style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+      {/* 4. FEATURES — What Covrabl does */}
+      <section id="features" style={{ padding: '80px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 16px', color: 'var(--color-text)' }}>
-            Five ways {APP_NAME} thinks about your insurance
+            What {APP_NAME} does
           </h2>
           <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: '0 0 40px', lineHeight: 1.7 }}>
             {APP_NAME} doesn&apos;t just store your policies — it continuously analyzes them to keep you protected.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24, textAlign: 'left' }}>
-            <div style={{ padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Coverage Scoring</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                A 0&ndash;100 Protection Score that tells you how strong your coverage is at a glance.
-              </p>
-            </div>
-            <div style={{ padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Gap Detection</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Identifies missing coverage types and inadequate limits before they become problems.
-              </p>
-            </div>
-            <div style={{ padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Renewal Tracking</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Automatic alerts before deadlines so you never miss a renewal or lapse in coverage.
-              </p>
-            </div>
-            <div style={{ padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Change Detection</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Spots and explains policy changes between terms so nothing slips by unnoticed.
-              </p>
-            </div>
-            <div style={{ padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>Smart Alerts</h3>
-              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Surfaces what needs your attention — so you focus on what matters, not on monitoring.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FEATURES */}
-      <section id="features" style={{ padding: '80px 24px', background: 'var(--color-surface)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 48px', textAlign: 'center', color: 'var(--color-text)' }}>
-            What {APP_NAME} does
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, textAlign: 'left' }}>
             {[
-              { title: 'AI-powered extraction', desc: `Upload a document and ${APP_NAME} reads it — extracting carrier, limits, deductibles, renewal dates, and more automatically.` },
-              { title: 'Protection Score', desc: 'A clear 0–100 score across your entire portfolio so you know how protected you really are.' },
-              { title: 'Gap analysis', desc: 'Identifies missing coverage types, inadequate limits, and areas where you may be exposed.' },
-              { title: 'Renewal awareness', desc: 'Tracks every renewal date and alerts you before deadlines — so nothing lapses.' },
-              { title: 'Policy change tracking', desc: 'When a policy renews or updates, Covrabl detects what changed and explains it in plain language.' },
-              { title: 'Emergency-ready sharing', desc: 'Secure, permissioned access for loved ones, caregivers, or attorneys — so critical information is available when it matters most.' },
+              { icon: '🤖', title: 'AI-powered extraction', desc: `Upload a document and ${APP_NAME} reads it — extracting carrier, limits, deductibles, renewal dates, and more automatically.` },
+              { icon: '💯', title: 'Protection Score', desc: 'A 0\u2013100 score across your entire portfolio so you know how strong your coverage is at a glance.' },
+              { icon: '🔍', title: 'Gap detection', desc: 'Identifies missing coverage types and inadequate limits before they become problems.' },
+              { icon: '🔔', title: 'Renewal tracking', desc: 'Automatic alerts before every deadline so you never miss a renewal or lapse in coverage.' },
+              { icon: '📊', title: 'Change detection', desc: `When a policy renews, ${APP_NAME} spots what changed and explains it in plain language.` },
+              { icon: '🚨', title: 'Emergency-ready sharing', desc: 'Secure access for loved ones, caregivers, or attorneys — so critical info is available when it matters most.' },
             ].map(f => (
               <div key={f.title} className="card" style={{ padding: 24 }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
                 <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text)' }}>{f.title}</h3>
                 <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
               </div>

@@ -146,6 +146,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           padding: '12px 16px',
           backgroundColor: 'var(--color-primary-dark)',
           color: '#fff',
+          position: 'sticky',
+          top: 0,
+          zIndex: 101,
         }}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
