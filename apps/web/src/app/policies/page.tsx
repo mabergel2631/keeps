@@ -7,7 +7,7 @@ import { policiesApi, renewalsApi, remindersApi, premiumsApi, sharingApi, docume
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { APP_NAME } from '../config';
-import { POLICY_TYPE_CONFIG, POLICY_TYPES, STATUS_COLORS, SEVERITY_COLORS } from '../constants';
+import { POLICY_TYPE_CONFIG, POLICY_TYPES, POLICY_TYPE_CATEGORIES, STATUS_COLORS, SEVERITY_COLORS } from '../constants';
 import TabNav from '../components/TabNav';
 
 export default function PoliciesPage() {
@@ -1179,26 +1179,39 @@ function PoliciesPageInner() {
               </div>
             )}
 
-            {/* Step 2: Type */}
+            {/* Step 2: Type (grouped by category) */}
             {wizardStep === 2 && (
               <div>
                 <button onClick={() => setWizardStep(wizardData.scope === 'business' ? 15 : 1)} className="btn btn-ghost" style={{ marginBottom: 16, padding: '4px 8px', fontSize: 13 }}>&larr; Back</button>
                 <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', marginBottom: 20 }}>What type of insurance?</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                  {Object.entries(POLICY_TYPE_CONFIG).filter(([, cfg]) => cfg.group === 'both' || cfg.group === (wizardData.scope || 'personal')).map(([key, cfg]) => (
-                    <button
-                      key={key}
-                      onClick={() => { setWizardData(d => ({ ...d, policy_type: key })); setWizardStep(wizardMethod === 'url' ? 4 : 3); }}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 16,
-                        border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', cursor: 'pointer'
-                      }}
-                    >
-                      <span style={{ fontSize: 24 }}>{cfg.icon}</span>
-                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-text)' }}>{cfg.label}</span>
-                    </button>
+                {POLICY_TYPE_CATEGORIES
+                  .filter(cat => cat.scope === 'both' || cat.scope === (wizardData.scope || 'personal'))
+                  .map(cat => (
+                    <div key={cat.label} style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                        {cat.label}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                        {cat.types.map(key => {
+                          const cfg = POLICY_TYPE_CONFIG[key];
+                          if (!cfg) return null;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => { setWizardData(d => ({ ...d, policy_type: key })); setWizardStep(wizardMethod === 'url' ? 4 : 3); }}
+                              style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 14,
+                                border: '2px solid var(--color-border)', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', cursor: 'pointer',
+                              }}
+                            >
+                              <span style={{ fontSize: 22 }}>{cfg.icon}</span>
+                              <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--color-text)' }}>{cfg.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ))}
-                </div>
               </div>
             )}
 

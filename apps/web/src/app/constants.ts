@@ -87,3 +87,19 @@ export const DOC_TYPES: Record<string, string> = {
 
 /** Emergency-priority order for grouping policies */
 export const EMERGENCY_TYPE_ORDER = ['auto', 'motorcycle', 'home', 'health', 'dental', 'vision', 'renters', 'life', 'disability', 'pet', 'boat', 'rv', 'liability', 'umbrella', 'workers_comp', 'other'];
+
+/** Grouped categories for the type picker */
+export const POLICY_TYPE_CATEGORIES: { label: string; scope: 'personal' | 'business' | 'both'; types: string[] }[] = [
+  // Personal
+  { label: 'Vehicles', scope: 'personal', types: ['auto', 'motorcycle', 'boat', 'rv'] },
+  { label: 'Property', scope: 'personal', types: ['home', 'renters', 'flood', 'earthquake'] },
+  { label: 'Health & Wellness', scope: 'personal', types: ['health', 'dental', 'vision', 'pet'] },
+  { label: 'Life & Income', scope: 'personal', types: ['life', 'disability'] },
+  { label: 'Liability', scope: 'both', types: ['liability', 'umbrella'] },
+  // Business
+  { label: 'Core Coverage', scope: 'business', types: ['general_liability', 'professional_liability', 'bop'] },
+  { label: 'Property & Fleet', scope: 'business', types: ['commercial_property', 'commercial_auto', 'inland_marine'] },
+  { label: 'Specialty', scope: 'business', types: ['cyber', 'workers_comp', 'directors_officers', 'epli'] },
+  // Always
+  { label: 'Other', scope: 'both', types: ['other'] },
+];
