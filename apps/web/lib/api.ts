@@ -132,6 +132,9 @@ export type AuthMe = {
   id: number;
   email: string;
   role: string;
+  plan: string;
+  trial_active: boolean;
+  trial_days_left: number;
 };
 
 export const authApi = {
@@ -1291,6 +1294,46 @@ export const profileApi = {
   },
   getIcePrefill(): Promise<IcePrefill> {
     return request<IcePrefill>("/profile/prefill/ice");
+  },
+};
+
+// ── Billing API ─────────────────────────────────────
+
+export type PlanInfo = {
+  id: string;
+  name: string;
+  description: string;
+  max_active_policies: number;
+  features: string[];
+  monthly_price: number;
+  annual_price: number;
+};
+
+export type BillingStatus = {
+  plan: string;
+  max_active_policies: number;
+  has_subscription: boolean;
+  trial_active: boolean;
+  trial_days_left: number;
+  stripe_configured: boolean;
+};
+
+export const billingApi = {
+  status(): Promise<BillingStatus> {
+    return request<BillingStatus>("/billing/status");
+  },
+  plans(): Promise<{ plans: PlanInfo[]; trial_days: number }> {
+    return request<{ plans: PlanInfo[]; trial_days: number }>("/billing/plans");
+  },
+  checkout(plan: string, interval: string): Promise<{ checkout_url: string }> {
+    return request<{ checkout_url: string }>("/billing/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, interval }),
+    });
+  },
+  portal(): Promise<{ portal_url: string }> {
+    return request<{ portal_url: string }>("/billing/portal", { method: "POST" });
   },
 };
 

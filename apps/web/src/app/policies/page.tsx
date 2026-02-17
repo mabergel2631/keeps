@@ -110,7 +110,7 @@ function PoliciesPageInner() {
         setProfileIncomplete(noFlagsSet && noName);
       } catch { /* ignore */ }
     } catch (err: any) {
-      if (err.status === 401 || err.status === 403) { logout(); router.replace('/login'); return; }
+      if (err.status === 401) { logout(); router.replace('/login'); return; }
       setError(err.message);
     } finally {
       setLoading(false);
@@ -608,7 +608,20 @@ function PoliciesPageInner() {
           </div>
         )}
 
-        {error && <div className="alert alert-error" style={{ marginBottom: 24 }}>{error}</div>}
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <span>{error}</span>
+            {error.toLowerCase().includes('upgrade') && (
+              <button onClick={() => router.push('/pricing')} style={{
+                padding: '6px 16px', backgroundColor: 'var(--color-secondary)', color: '#fff',
+                border: 'none', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              }}>
+                View Plans
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Pending Drafts Alert */}
         {pendingDrafts.length > 0 && (

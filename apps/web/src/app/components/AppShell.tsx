@@ -14,11 +14,12 @@ const NAV_ITEMS = [
   { href: '/audit', label: 'Alerts', icon: '🔔' },
   { href: '/policies/compare', label: 'Compare', icon: '⚖️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
+  { href: '/billing', label: 'Billing', icon: '💳' },
   { href: '/privacy', label: 'Privacy', icon: '🔒' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { token, role, logout } = useAuth();
+  const { token, role, plan, trialActive, trialDaysLeft, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -117,6 +118,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          {trialActive && trialDaysLeft <= 10 && (
+            <button
+              onClick={() => router.push('/pricing')}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '8px 12px',
+                marginBottom: 6,
+                border: '1px solid rgba(63, 167, 163, 0.4)',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'rgba(63, 167, 163, 0.15)',
+                color: '#5fbfbc',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              {trialDaysLeft} days left in trial
+            </button>
+          )}
           <button
             onClick={() => { logout(); router.replace('/'); }}
             style={{

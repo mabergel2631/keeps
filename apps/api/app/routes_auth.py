@@ -55,7 +55,12 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    user = User(email=payload.email, hashed_password=hash_password(payload.password))
+    user = User(
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        plan="trial",
+        trial_ends_at=datetime.now(timezone.utc) + timedelta(days=30),
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -133,4 +138,24 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 
 @router.get("/me")
 def get_me(user: User = Depends(get_current_user)):
-    return {"id": user.id, "email": user.email, "role": user.role}
+    # Determine effective plan (trial expires → free)
+    plan = user.plan or "free"
+    trial_active = False
+    trial_days_left = 0
+    if plan == "trial" and user.trial_ends_at:
+        now = datetime.now(timezone.utc)
+        trial_end = user.trial_ends_at.replace(tzinfo=timezone.utc) if user.trial_ends_at.tzinfo is None else user.trial_ends_at
+        if trial_end > now:
+            trial_active = True
+            trial_days_left = max(0, (trial_end - now).days)
+        else:
+            plan = "free"
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "plan": plan,
+        "trial_active": trial_active,
+        "trial_days_left": trial_days_left,
+    }

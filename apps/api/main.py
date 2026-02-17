@@ -37,6 +37,7 @@ from app.routes_agent import router as agent_router
 from app.routes_exposures import router as exposures_router
 from app.routes_certificates import router as certificates_router
 from app.routes_profile import router as profile_router
+from app.routes_billing import router as billing_router
 
 app = FastAPI(title="Covrabl API")
 
@@ -98,6 +99,14 @@ def on_startup():
         with engine.begin() as conn:
             if "role" not in user_cols:
                 conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'individual'"))
+            if "plan" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN plan VARCHAR(20) DEFAULT 'trial'"))
+            if "stripe_customer_id" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(100)"))
+            if "stripe_subscription_id" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(100)"))
+            if "trial_ends_at" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN trial_ends_at TIMESTAMP"))
     if "policy_shares" in insp.get_table_names():
         share_cols = [c["name"] for c in insp.get_columns("policy_shares")]
         with engine.begin() as conn:
@@ -132,3 +141,4 @@ app.include_router(agent_router)
 app.include_router(exposures_router)
 app.include_router(certificates_router)
 app.include_router(profile_router)
+app.include_router(billing_router)

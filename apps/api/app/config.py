@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     from_email: str = "noreply@covrabl.com"
     app_url: str = "http://localhost:3000"
 
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_basic_monthly_price_id: str = ""
+    stripe_basic_annual_price_id: str = ""
+    stripe_pro_monthly_price_id: str = ""
+    stripe_pro_annual_price_id: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
