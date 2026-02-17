@@ -458,16 +458,15 @@ function PoliciesPageInner() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       {/* Delete Confirmation */}
-      {deleteConfirm !== null && (
-        <ConfirmDialog
-          open={true}
-          title="Delete Policy"
-          message="Are you sure you want to delete this policy? This cannot be undone."
-          danger={true}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
+      <ConfirmDialog
+        open={deleteConfirm !== null}
+        title="Delete Policy"
+        message="Are you sure you want to delete this policy? This cannot be undone."
+        confirmLabel="Delete"
+        danger={true}
+        onConfirm={() => { if (deleteConfirm !== null) handleDelete(deleteConfirm); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
 

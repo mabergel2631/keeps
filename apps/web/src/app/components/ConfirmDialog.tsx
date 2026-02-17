@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 type Props = {
   open: boolean;
@@ -14,17 +14,26 @@ type Props = {
 
 export default function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', danger, onConfirm, onCancel }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCancelRef = useRef(onCancel);
+  const hasOpened = useRef(false);
+  onCancelRef.current = onCancel;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      hasOpened.current = false;
+      return;
+    }
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') onCancelRef.current();
     };
     window.addEventListener('keydown', handler);
-    // Focus the dialog when opened
-    dialogRef.current?.focus();
+    // Focus only on initial open, not on every re-render
+    if (!hasOpened.current) {
+      hasOpened.current = true;
+      dialogRef.current?.focus();
+    }
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onCancel]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -35,7 +44,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         backgroundColor: 'rgba(0,0,0,0.4)',
       }}
-      onClick={onCancel}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
       <div
         ref={dialogRef}
@@ -43,7 +52,6 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         tabIndex={-1}
-        onClick={e => e.stopPropagation()}
         className="card"
         style={{
           width: '100%', maxWidth: 400, padding: 24,
