@@ -80,6 +80,12 @@ export default function Home() {
               style={{ display: 'inline-block', opacity: 0.9 }}
             />
           </div>
+          <div style={{
+            fontSize: 13, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+            color: 'var(--color-secondary-light)', marginBottom: 16,
+          }}>
+            Insurance Intelligence
+          </div>
           <h1 style={{
             fontSize: 48, fontWeight: 700, margin: '0 0 20px', lineHeight: 1.15,
             letterSpacing: 'var(--letter-spacing-tight)',
@@ -476,6 +482,12 @@ export default function Home() {
           pointerEvents: 'none',
         }} />
         <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+          <div style={{
+            fontSize: 13, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+            color: 'var(--color-secondary-light)', marginBottom: 16,
+          }}>
+            Insurance Intelligence
+          </div>
           <h2 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 16px', letterSpacing: 'var(--letter-spacing-tight)' }}>
             Know where you stand.
           </h2>

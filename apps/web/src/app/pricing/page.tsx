@@ -71,6 +71,12 @@ function PricingContent() {
           </div>
         )}
 
+        <div style={{
+          fontSize: 13, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+          color: '#5fbfbc', marginBottom: 12,
+        }}>
+          Insurance Intelligence
+        </div>
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)', letterSpacing: 'var(--letter-spacing-tight)' }}>
           Simple, transparent pricing
         </h1>
