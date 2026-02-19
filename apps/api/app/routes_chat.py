@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
+import openai
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -323,7 +323,7 @@ def chat_send(body: ChatSendRequest, user: User = Depends(get_current_user), db:
     if not body.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    if not settings.anthropic_api_key:
+    if not settings.openai_api_key:
         raise HTTPException(status_code=503, detail="AI chat is not configured")
 
     # Get or create conversation
@@ -376,16 +376,19 @@ def chat_send(body: ChatSendRequest, user: User = Depends(get_current_user), db:
 
         full_response = ""
         try:
-            client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-            with client.messages.stream(
-                model="claude-sonnet-4-20250514",
+            client = openai.OpenAI(api_key=settings.openai_api_key)
+            oai_messages = [{"role": "system", "content": system_prompt}] + messages
+            stream = client.chat.completions.create(
+                model="gpt-4o",
                 max_tokens=2048,
-                system=system_prompt,
-                messages=messages,
-            ) as stream:
-                for text in stream.text_stream:
-                    full_response += text
-                    yield f"data: {json.dumps({'type': 'text', 'content': text})}\n\n"
+                messages=oai_messages,
+                stream=True,
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.content:
+                    full_response += delta.content
+                    yield f"data: {json.dumps({'type': 'text', 'content': delta.content})}\n\n"
         except Exception as e:
             logger.error("Chat streaming error: %s", e)
             yield f"data: {json.dumps({'type': 'error', 'content': 'Sorry, something went wrong. Please try again.'})}\n\n"
