@@ -56,6 +56,7 @@ function PoliciesPageInner() {
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [profileDismissed, setProfileDismissed] = useState(false);
   const [showBulkShare, setShowBulkShare] = useState(false);
+  const [sortBy, setSortBy] = useState<'default' | 'carrier' | 'renewal' | 'type' | 'newest'>('default');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -326,6 +327,25 @@ function PoliciesPageInner() {
       (p.nickname || '').toLowerCase().includes(q) ||
       (p.business_name || '').toLowerCase().includes(q)
     );
+  });
+
+  // Sort policies when a sort option is active
+  const sortedPolicies = sortBy === 'default' ? filteredPolicies : [...filteredPolicies].sort((a, b) => {
+    switch (sortBy) {
+      case 'carrier':
+        return a.carrier.localeCompare(b.carrier);
+      case 'renewal': {
+        const aDate = a.renewal_date ? new Date(a.renewal_date).getTime() : Infinity;
+        const bDate = b.renewal_date ? new Date(b.renewal_date).getTime() : Infinity;
+        return aDate - bDate;
+      }
+      case 'type':
+        return a.policy_type.localeCompare(b.policy_type);
+      case 'newest':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      default:
+        return 0;
+    }
   });
 
   // Group policies by scope, then by type/business
@@ -737,14 +757,32 @@ function PoliciesPageInner() {
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {activePolicies.length > 3 && (
-                <input
-                  className="form-input"
-                  placeholder="Search..."
-                  aria-label="Search policies"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  style={{ width: 200, padding: '8px 12px', fontSize: 14 }}
-                />
+                <>
+                  <input
+                    className="form-input"
+                    placeholder="Search..."
+                    aria-label="Search policies"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ width: 200, padding: '8px 12px', fontSize: 14 }}
+                  />
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as any)}
+                    aria-label="Sort policies"
+                    style={{
+                      padding: '8px 12px', fontSize: 14, border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)', backgroundColor: '#fff', color: 'var(--color-text)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="default">Grouped</option>
+                    <option value="carrier">Carrier A–Z</option>
+                    <option value="renewal">Renewal date</option>
+                    <option value="type">Policy type</option>
+                    <option value="newest">Newest first</option>
+                  </select>
+                </>
               )}
             </div>
           </div>
@@ -757,6 +795,11 @@ function PoliciesPageInner() {
               <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', margin: 0 }}>
                 {search ? 'No policies match your search.' : 'No policies yet. Add your first policy to get started.'}
               </p>
+            </div>
+          ) : sortBy !== 'default' ? (
+            /* ── FLAT SORTED VIEW ── */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {sortedPolicies.map(p => renderPolicyCard(p))}
             </div>
           ) : (
             <>
