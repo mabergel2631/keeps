@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../../lib/auth';
@@ -10,7 +10,14 @@ import { APP_NAME, APP_DESCRIPTION } from '../config';
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [mode, setMode] = useState<'login' | 'register'>('login');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('expired') === '1') {
+      setSessionExpired(true);
+    }
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -75,6 +82,15 @@ export default function LoginPage() {
             {mode === 'login' ? `Sign in to your ${APP_NAME} account` : `Get started with ${APP_NAME}`}
           </p>
 
+          {sessionExpired && !error && (
+            <div style={{
+              marginBottom: 20, padding: '10px 14px', fontSize: 13,
+              backgroundColor: '#fef9c3', border: '1px solid #fde68a',
+              borderRadius: 'var(--radius-md)', color: '#854d0e',
+            }}>
+              Your session expired. Please sign in again.
+            </div>
+          )}
           {error && <div className="alert alert-error" style={{ marginBottom: 20 }}>{error}</div>}
 
           <form onSubmit={handleSubmit}>

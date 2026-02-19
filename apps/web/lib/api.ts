@@ -23,6 +23,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const data = text ? safeJsonParse(text) : null;
 
   if (!res.ok) {
+    // Expired or invalid token — clear session and redirect to login
+    if (res.status === 401 && token) {
+      localStorage.removeItem("pv_token");
+      localStorage.removeItem("pv_role");
+      localStorage.removeItem("pv_plan");
+      if (typeof window !== "undefined") {
+        window.location.href = "/login?expired=1";
+        return undefined as never;
+      }
+    }
     const message =
       (data && (data.detail || data.message)) ||
       `${res.status} ${res.statusText}`;
