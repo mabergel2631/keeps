@@ -408,17 +408,23 @@ function PoliciesPageInner() {
         </div>
 
         {/* Key metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Coverage</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>
-              {p.coverage_amount ? `$${(p.coverage_amount / 100).toLocaleString()}` : '\u2014'}
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Annual Premium</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>
+              {p.premium_amount ? `$${p.premium_amount.toLocaleString()}` : '\u2014'}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Premium</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>
-              {p.premium_amount ? `$${(p.premium_amount / 100).toLocaleString()}/yr` : '\u2014'}
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Expiration</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>
+              {p.renewal_date ? new Date(p.renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '\u2014'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Deductible</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>
+              {p.deductible ? `$${p.deductible.toLocaleString()}` : '\u2014'}
             </div>
           </div>
         </div>
@@ -513,13 +519,13 @@ function PoliciesPageInner() {
               <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Total Coverage</div>
                 <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                  {totalCoverage > 0 ? `$${(totalCoverage / 100).toLocaleString()}` : '\u2014'}
+                  {totalCoverage > 0 ? `$${totalCoverage.toLocaleString()}` : '\u2014'}
                 </div>
               </div>
               <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Annual Premium</div>
                 <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                  {totalPremium > 0 ? `$${(totalPremium / 100).toLocaleString()}` : annualSpend > 0 ? `$${(annualSpend / 100).toLocaleString()}` : '\u2014'}
+                  {totalPremium > 0 ? `$${totalPremium.toLocaleString()}` : annualSpend > 0 ? `$${(annualSpend / 100).toLocaleString()}` : '\u2014'}
                 </div>
               </div>
               <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
