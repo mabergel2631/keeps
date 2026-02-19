@@ -1603,7 +1603,7 @@ export default function PolicyDetailPage() {
               <div>
                 <label style={labelStyle}>Role</label>
                 <select value={contactForm.role} onChange={e => setContactForm({ ...contactForm, role: e.target.value })} style={inputStyle}>
-                  {['broker', 'agent', 'claims', 'underwriter', 'customer_service', 'other'].map(r => <option key={r} value={r}>{r}</option>)}
+                  {['broker', 'agent', 'claims', 'underwriter', 'customer_service', 'named_insured', 'other'].map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
                 </select>
               </div>
               <div>

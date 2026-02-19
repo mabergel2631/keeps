@@ -113,7 +113,7 @@ class PolicyOut(PolicyBase):
 # ── Contacts ──────────────────────────────────────────
 
 class ContactBase(BaseModel):
-    role: Literal["agent", "broker", "claims", "customer_service", "underwriter", "other"]
+    role: Literal["agent", "broker", "claims", "customer_service", "underwriter", "named_insured", "other"]
     name: Optional[str] = None
     company: Optional[str] = None
     phone: Optional[str] = None
@@ -126,7 +126,7 @@ class ContactCreate(ContactBase):
 
 
 class ContactUpdate(BaseModel):
-    role: Optional[Literal["agent", "broker", "claims", "customer_service", "underwriter", "other"]] = None
+    role: Optional[Literal["agent", "broker", "claims", "customer_service", "underwriter", "named_insured", "other"]] = None
     name: Optional[str] = None
     company: Optional[str] = None
     phone: Optional[str] = None
