@@ -1399,3 +1399,107 @@ export type COIExtraction = {
   producer_phone: string | null;
   producer_email: string | null;
 };
+
+// ── Chat API ────────────────────────────────────────
+
+export type ChatConversation = {
+  id: number;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatMessageData = {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export const chatApi = {
+  listConversations(): Promise<ChatConversation[]> {
+    return request<ChatConversation[]>("/chat/conversations");
+  },
+  getMessages(conversationId: number): Promise<ChatMessageData[]> {
+    return request<ChatMessageData[]>(`/chat/conversations/${conversationId}/messages`);
+  },
+  deleteConversation(conversationId: number): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/chat/conversations/${conversationId}`, { method: "DELETE" });
+  },
+  sendMessageStream(
+    message: string,
+    conversationId: number | null,
+    onText: (text: string) => void,
+    onConversationId: (id: number) => void,
+    onDone: () => void,
+    onError: (err: string) => void,
+  ): AbortController {
+    const controller = new AbortController();
+    const token = getToken();
+    const url = `${API_BASE}/chat/send`;
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, conversation_id: conversationId }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.detail || `${res.status} ${res.statusText}`);
+        }
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr) continue;
+            try {
+              const event = JSON.parse(jsonStr);
+              if (event.type === "conversation_id") {
+                onConversationId(event.id);
+              } else if (event.type === "text") {
+                onText(event.content);
+              } else if (event.type === "error") {
+                onError(event.content);
+              } else if (event.type === "done") {
+                onDone();
+              }
+            } catch {
+              // skip malformed JSON
+            }
+          }
+        }
+        // Process remaining buffer
+        if (buffer.startsWith("data: ")) {
+          try {
+            const event = JSON.parse(buffer.slice(6).trim());
+            if (event.type === "done") onDone();
+          } catch { /* ignore */ }
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          onError(err.message || "Connection failed");
+        }
+      });
+
+    return controller;
+  },
+};

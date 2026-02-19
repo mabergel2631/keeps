@@ -11,6 +11,7 @@ from app.models import User, Policy, Contact, CoverageItem, PolicyDetail, Passwo
 from app.models_documents import Document  # noqa: F401
 from app.models_features import Premium, Claim, RenewalReminder, AuditLog, PolicyShare, EmergencyCard, PremiumHistory, PolicyDelta, DeltaExplanation, CoverageScore, InboundAddress, InboundEmail, PolicyDraft, Certificate, CertificateReminder  # noqa: F401
 from app.models_profile import UserProfile, ProfileContact  # noqa: F401
+from app.models_chat import Conversation, ChatMessage  # noqa: F401
 
 from app.routes_auth import router as auth_router
 from app.routes_policies import router as policies_router
@@ -38,6 +39,7 @@ from app.routes_exposures import router as exposures_router
 from app.routes_certificates import router as certificates_router
 from app.routes_profile import router as profile_router
 from app.routes_billing import router as billing_router
+from app.routes_chat import router as chat_router
 
 app = FastAPI(title="Covrabl API")
 
@@ -123,6 +125,11 @@ def on_startup():
                 conn.execute(text("ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(100)"))
             if "trial_ends_at" not in user_cols:
                 conn.execute(text("ALTER TABLE users ADD COLUMN trial_ends_at TIMESTAMP"))
+    if "documents" in insp.get_table_names():
+        doc_cols = [c["name"] for c in insp.get_columns("documents")]
+        with engine.begin() as conn:
+            if "cached_text" not in doc_cols:
+                conn.execute(text("ALTER TABLE documents ADD COLUMN cached_text TEXT"))
     if "policy_shares" in insp.get_table_names():
         share_cols = [c["name"] for c in insp.get_columns("policy_shares")]
         with engine.begin() as conn:
@@ -158,3 +165,4 @@ app.include_router(exposures_router)
 app.include_router(certificates_router)
 app.include_router(profile_router)
 app.include_router(billing_router)
+app.include_router(chat_router)

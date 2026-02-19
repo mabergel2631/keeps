@@ -1,0 +1,431 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../../lib/auth';
+import { chatApi, ChatConversation, ChatMessageData } from '../../../lib/api';
+
+type DisplayMessage = {
+  id?: number;
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+const SUGGESTED_QUESTIONS = [
+  'What policies do I have?',
+  'What are my coverage gaps?',
+  'Am I covered for flood damage?',
+  'When do my policies renew?',
+];
+
+export default function ChatPage() {
+  const { token } = useAuth();
+  const router = useRouter();
+
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [activeConvoId, setActiveConvoId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!token) { router.replace('/login'); return; }
+    loadConversations();
+  }, [token]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingText]);
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const list = await chatApi.listConversations();
+      setConversations(list);
+    } catch { /* ignore */ }
+  }, []);
+
+  const loadMessages = useCallback(async (convoId: number) => {
+    try {
+      const msgs = await chatApi.getMessages(convoId);
+      setMessages(msgs.map(m => ({ id: m.id, role: m.role, content: m.content })));
+      setActiveConvoId(convoId);
+      setSidebarOpen(false);
+    } catch { /* ignore */ }
+  }, []);
+
+  const startNewChat = useCallback(() => {
+    setActiveConvoId(null);
+    setMessages([]);
+    setInput('');
+    setStreamingText('');
+    setSidebarOpen(false);
+    textareaRef.current?.focus();
+  }, []);
+
+  const deleteConversation = useCallback(async (convoId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await chatApi.deleteConversation(convoId);
+      setConversations(prev => prev.filter(c => c.id !== convoId));
+      if (activeConvoId === convoId) {
+        startNewChat();
+      }
+    } catch { /* ignore */ }
+  }, [activeConvoId, startNewChat]);
+
+  const sendMessage = useCallback((text?: string) => {
+    const msg = (text || input).trim();
+    if (!msg || isStreaming) return;
+
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    setIsStreaming(true);
+    setStreamingText('');
+
+    const controller = chatApi.sendMessageStream(
+      msg,
+      activeConvoId,
+      (chunk) => {
+        setStreamingText(prev => prev + chunk);
+      },
+      (id) => {
+        setActiveConvoId(id);
+        loadConversations();
+      },
+      () => {
+        setStreamingText(prev => {
+          if (prev) {
+            setMessages(msgs => [...msgs, { role: 'assistant', content: prev }]);
+          }
+          return '';
+        });
+        setIsStreaming(false);
+      },
+      (err) => {
+        setStreamingText('');
+        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err}` }]);
+        setIsStreaming(false);
+      },
+    );
+
+    abortRef.current = controller;
+  }, [input, isStreaming, activeConvoId, loadConversations]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const showEmptyState = messages.length === 0 && !isStreaming;
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.3)', zIndex: 49 }}
+          className="chat-overlay"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`chat-sidebar${sidebarOpen ? ' open' : ''}`}
+        style={{
+          width: 260,
+          minWidth: 260,
+          backgroundColor: 'var(--color-surface)',
+          borderRight: '1px solid var(--color-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '16px 12px', borderBottom: '1px solid var(--color-border)' }}>
+          <button
+            onClick={startNewChat}
+            style={{
+              width: '100%',
+              padding: '10px 16px',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            + New Chat
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px' }}>
+          {conversations.map(c => (
+            <button
+              key={c.id}
+              onClick={() => loadMessages(c.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: c.id === activeConvoId ? 'var(--color-primary-bg)' : 'transparent',
+                color: 'var(--color-text)',
+                fontSize: 13,
+                cursor: 'pointer',
+                textAlign: 'left',
+                marginBottom: 2,
+              }}
+            >
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {c.title || 'Untitled'}
+              </span>
+              <span
+                onClick={(e) => deleteConversation(c.id, e)}
+                style={{ opacity: 0.4, fontSize: 14, padding: '0 4px', flexShrink: 0 }}
+                title="Delete conversation"
+              >
+                x
+              </span>
+            </button>
+          ))}
+          {conversations.length === 0 && (
+            <div style={{ padding: 16, fontSize: 13, color: 'var(--color-text-muted)', textAlign: 'center' }}>
+              No conversations yet
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Main chat area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        {/* Chat header */}
+        <div style={{
+          padding: '12px 20px',
+          borderBottom: '1px solid var(--color-border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          flexShrink: 0,
+        }}>
+          <button
+            className="chat-menu-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              fontSize: 20,
+              cursor: 'pointer',
+              padding: '4px 8px',
+              color: 'var(--color-text)',
+            }}
+          >
+            &#9776;
+          </button>
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)' }}>
+            Ask AI
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+            Insurance coverage assistant
+          </span>
+        </div>
+
+        {/* Messages area */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 0' }}>
+          {showEmptyState && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 24, paddingBottom: 60 }}>
+              <div style={{ fontSize: 48 }}>&#128172;</div>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
+                Ask about your coverage
+              </h2>
+              <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0, textAlign: 'center', maxWidth: 400 }}>
+                I can answer questions about your policies, coverage limits, deductibles, gaps, and more.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 500 }}>
+                {SUGGESTED_QUESTIONS.map(q => (
+                  <button
+                    key={q}
+                    onClick={() => sendMessage(q)}
+                    style={{
+                      padding: '8px 16px',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 20,
+                      backgroundColor: 'var(--color-surface)',
+                      color: 'var(--color-text)',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: '75%',
+                  padding: '12px 16px',
+                  borderRadius: 16,
+                  backgroundColor: msg.role === 'user' ? 'var(--color-primary)' : 'var(--color-surface)',
+                  color: msg.role === 'user' ? '#fff' : 'var(--color-text)',
+                  border: msg.role === 'assistant' ? '1px solid var(--color-border)' : 'none',
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+
+          {/* Streaming message */}
+          {isStreaming && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
+              <div
+                style={{
+                  maxWidth: '75%',
+                  padding: '12px 16px',
+                  borderRadius: 16,
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {streamingText || (
+                  <span style={{ color: 'var(--color-text-muted)' }}>Thinking...</span>
+                )}
+                <span style={{ display: 'inline-block', width: 6, height: 16, backgroundColor: 'var(--color-primary)', marginLeft: 2, animation: 'blink 1s infinite', verticalAlign: 'text-bottom' }} />
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Disclaimer */}
+        <div style={{ padding: '4px 20px', textAlign: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+            AI-generated responses based on your policy data. Not professional insurance advice.
+          </span>
+        </div>
+
+        {/* Input area */}
+        <div style={{ padding: '12px 20px 20px', flexShrink: 0 }}>
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'flex-end',
+            border: '1px solid var(--color-border)',
+            borderRadius: 12,
+            padding: '8px 12px',
+            backgroundColor: 'var(--color-surface)',
+          }}>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about your insurance..."
+              disabled={isStreaming}
+              rows={1}
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                fontSize: 14,
+                lineHeight: 1.5,
+                padding: '4px 0',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                maxHeight: 120,
+                overflow: 'auto',
+              }}
+              onInput={(e) => {
+                const el = e.currentTarget;
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+              }}
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={isStreaming || !input.trim()}
+              style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: 8,
+                backgroundColor: isStreaming || !input.trim() ? 'var(--color-border)' : 'var(--color-primary)',
+                color: '#fff',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: isStreaming || !input.trim() ? 'default' : 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Blink animation */}
+      <style>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+        @media (max-width: 768px) {
+          .chat-sidebar {
+            position: fixed !important;
+            left: -280px;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+            transition: left 0.2s ease;
+          }
+          .chat-sidebar.open {
+            left: 0 !important;
+          }
+          .chat-menu-btn {
+            display: block !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, DateTime, ForeignKey, func
+from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -15,5 +15,6 @@ class Document(Base):
 
     doc_type: Mapped[str] = mapped_column(String(50), server_default="policy")  # policy, insurance_card, endorsement, other
     extraction_status: Mapped[str] = mapped_column(String(20), server_default="none")  # none, pending, done, failed
+    cached_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
