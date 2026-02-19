@@ -381,7 +381,6 @@ function PoliciesPageInner() {
   const systemStatus = getSystemStatus();
 
   // Compute summary stats
-  const totalCoverage = scopedPolicies.reduce((sum, p) => sum + (p.coverage_amount || 0), 0);
   const totalPremium = scopedPolicies.reduce((sum, p) => sum + (p.premium_amount || 0), 0);
 
   const renderPolicyCard = (p: Policy) => {
@@ -535,14 +534,8 @@ function PoliciesPageInner() {
 
           {!loading && scopedPolicies.length > 0 && (
             <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16,
             }}>
-              <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Total Coverage</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                  {totalCoverage > 0 ? `$${totalCoverage.toLocaleString()}` : '\u2014'}
-                </div>
-              </div>
               <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Annual Premium</div>
                 <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
