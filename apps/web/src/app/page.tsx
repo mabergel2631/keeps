@@ -138,9 +138,42 @@ export default function Home() {
             </div>
             <div style={{
               backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)', height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-lg)', height: 280, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14, overflow: 'hidden',
             }}>
-              <span style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>Product screenshot</span>
+              {/* Fake document card */}
+              <div style={{
+                background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span style={{ fontSize: 22 }}>📄</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>auto-policy-2026.pdf</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Uploaded just now</div>
+                </div>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, color: '#15803d', background: '#dcfce7',
+                  padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap',
+                }}>Extracted</span>
+              </div>
+              {/* Extracted fields */}
+              <div style={{
+                background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '10px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px',
+              }}>
+                {[
+                  { label: 'Carrier', value: 'State Farm' },
+                  { label: 'Policy #', value: 'SF-8834201' },
+                  { label: 'Coverage', value: '$500K / $1M' },
+                  { label: 'Deductible', value: '$500' },
+                  { label: 'Renewal', value: 'Mar 14, 2026' },
+                  { label: 'Type', value: 'Auto' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{f.label}</div>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--color-text)', marginTop: 1 }}>{f.value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -148,10 +181,45 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center', marginBottom: 64 }}>
             <div style={{
               backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)', height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-lg)', height: 280, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12, overflow: 'hidden',
               order: 0,
             }}>
-              <span style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>Product screenshot</span>
+              {/* Stat cards row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {[
+                  { label: 'Total Coverage', value: '$1.2M' },
+                  { label: 'Annual Premium', value: '$4,850' },
+                  { label: 'Active Policies', value: '5' },
+                ].map(s => (
+                  <div key={s.label} style={{
+                    background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                    padding: '10px 10px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Mini policy tiles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { icon: '🚗', name: 'Auto', carrier: 'State Farm', color: '#15803d' },
+                  { icon: '🏠', name: 'Home', carrier: 'Allstate', color: '#15803d' },
+                  { icon: '☂️', name: 'Umbrella', carrier: 'USAA', color: '#15803d' },
+                ].map(p => (
+                  <div key={p.name} style={{
+                    background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                    padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span style={{ fontSize: 14 }}>{p.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text)' }}>{p.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--color-text-muted)', marginLeft: 6 }}>· {p.carrier}</span>
+                    </div>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: p.color, flexShrink: 0 }} />
+                  </div>
+                ))}
+              </div>
             </div>
             <div style={{ order: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Step 2</div>
@@ -173,9 +241,48 @@ export default function Home() {
             </div>
             <div style={{
               backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)', height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-lg)', height: 280, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, overflow: 'hidden',
             }}>
-              <span style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>Product screenshot</span>
+              {/* Renewal header card */}
+              <div style={{
+                background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '12px 14px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>🚗</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>State Farm · Auto</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: '#854d0e', background: '#fef9c3',
+                    padding: '2px 8px', borderRadius: 10, marginLeft: 'auto', whiteSpace: 'nowrap',
+                  }}>Renews in 23 days</span>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Policy SF-8834201 · Renewal Mar 14, 2026</div>
+              </div>
+              {/* Change row — premium increase */}
+              <div style={{
+                background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, color: '#854d0e', background: '#fef9c3',
+                  padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap',
+                }}>⚠️ Change</span>
+                <span style={{ fontSize: 11, color: 'var(--color-text)' }}>
+                  Premium <span style={{ fontWeight: 600 }}>$1,180</span> → <span style={{ fontWeight: 600, color: '#b91c1c' }}>$1,340</span>
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--color-text-muted)', marginLeft: 'auto', whiteSpace: 'nowrap' }}>+$160/yr</span>
+              </div>
+              {/* No other changes */}
+              <div style={{
+                background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, color: '#15803d', background: '#dcfce7',
+                  padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap',
+                }}>✓ OK</span>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>No other changes detected</span>
+              </div>
             </div>
           </div>
         </div>
