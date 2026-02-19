@@ -301,9 +301,6 @@ function PoliciesPageInner() {
   const nextRenewal = scopedRenewals.length > 0 ? scopedRenewals[0] : null;
   const daysToNextRenewal = nextRenewal ? Math.ceil((new Date(nextRenewal.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
   const urgentAlerts = smartAlerts.filter(a => a.severity === 'high' && (scopeTab === 'all' || scopedPolicyIds.has(a.policy_id)));
-  const typeCounts: Record<string, number> = {};
-  scopedPolicies.forEach(p => { typeCounts[p.policy_type] = (typeCounts[p.policy_type] || 0) + 1; });
-
   // Compute policy-level status based on gaps
   const getPolicyStatus = (policyId: number): { status: 'ok' | 'warning' | 'alert'; label: string; color: string; bgColor: string } => {
     const policyGaps = coverageGaps.filter(g =>
@@ -362,26 +359,21 @@ function PoliciesPageInner() {
 
   const systemStatus = getSystemStatus();
 
-  // Generate insights (scoped)
-  const insights: string[] = [];
-  if (scopedPolicies.length > 0) {
-    if (daysToNextRenewal !== null && daysToNextRenewal > 0) {
-      insights.push(`Next renewal in ${daysToNextRenewal} days.`);
-    } else if (daysToNextRenewal !== null && daysToNextRenewal <= 0) {
-      insights.push(`A policy renewal is overdue.`);
-    } else {
-      insights.push(`No upcoming renewals.`);
-    }
-    Object.entries(typeCounts).forEach(([type, count]) => {
-      insights.push(`You have ${count} active ${POLICY_TYPE_CONFIG[type]?.label.toLowerCase() || type} polic${count > 1 ? 'ies' : 'y'}.`);
-    });
-    if (annualSpend > 0) {
-      insights.push(`Annual premium: $${(annualSpend / 100).toLocaleString()}${scopeTab !== 'all' ? ' (all policies)' : ''}.`);
-    }
-  }
+  // Compute summary stats
+  const totalCoverage = scopedPolicies.reduce((sum, p) => sum + (p.coverage_amount || 0), 0);
+  const totalPremium = scopedPolicies.reduce((sum, p) => sum + (p.premium_amount || 0), 0);
 
-  const renderPolicyRow = (p: Policy) => {
+  const renderPolicyCard = (p: Policy) => {
     const policyStatus = getPolicyStatus(p.id);
+    const cfg = POLICY_TYPE_CONFIG[p.policy_type] || { icon: '📋', label: p.policy_type };
+    const renewalInfo = p.renewal_date ? (() => {
+      const days = Math.ceil((new Date(p.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (days < 0) return { label: 'Overdue', bg: 'var(--color-danger-light)', fg: 'var(--color-danger-dark)' };
+      if (days <= 7) return { label: `${days}d`, bg: 'var(--color-warning-light)', fg: 'var(--color-warning-dark)' };
+      if (days <= 30) return { label: `${days}d`, bg: 'var(--color-info-light)', fg: 'var(--color-info-dark)' };
+      return { label: new Date(p.renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), bg: 'var(--color-success-light)', fg: 'var(--color-success-dark)' };
+    })() : null;
+
     return (
       <div
         key={p.id}
@@ -390,72 +382,75 @@ function PoliciesPageInner() {
         onClick={() => router.push(`/policies/${p.id}`)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/policies/${p.id}`); } }}
         style={{
-          display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px',
           backgroundColor: '#fff',
           border: `1px solid ${policyStatus.status === 'alert' ? 'var(--color-danger-border)' : policyStatus.status === 'warning' ? 'var(--color-warning-border)' : 'var(--color-border)'}`,
-          borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s',
+          borderRadius: 'var(--radius-lg)', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s',
+          padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, position: 'relative',
         }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'; }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = policyStatus.status === 'alert' ? 'var(--color-danger-border)' : policyStatus.status === 'warning' ? 'var(--color-warning-border)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
       >
-        <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: policyStatus.status === 'alert' ? 'var(--color-danger)' : policyStatus.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)', flexShrink: 0 }} title={policyStatus.label} />
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)' }}>{p.nickname || p.carrier}</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', backgroundColor: policyStatus.bgColor, color: policyStatus.color, borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
-              {policyStatus.status === 'alert' ? '⚠️' : policyStatus.status === 'warning' ? '💡' : '✓'} {policyStatus.label}
+        {/* Header: icon + name + status */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>{cfg.icon}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {p.nickname || p.carrier}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+              {cfg.label}{p.business_name ? ` \u00b7 ${p.business_name}` : ''}
+            </div>
+          </div>
+          <div style={{
+            width: 10, height: 10, borderRadius: '50%', flexShrink: 0, marginTop: 4,
+            backgroundColor: policyStatus.status === 'alert' ? 'var(--color-danger)' : policyStatus.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)',
+          }} title={policyStatus.label} />
+        </div>
+
+        {/* Key metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Coverage</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>
+              {p.coverage_amount ? `$${(p.coverage_amount / 100).toLocaleString()}` : '\u2014'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>Premium</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>
+              {p.premium_amount ? `$${(p.premium_amount / 100).toLocaleString()}/yr` : '\u2014'}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer: renewal + badges */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 'auto' }}>
+          {renewalInfo && (
+            <span style={{ padding: '3px 8px', backgroundColor: renewalInfo.bg, color: renewalInfo.fg, borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+              {renewalInfo.label}
             </span>
-            {p.status && p.status !== 'active' && (() => {
-              const sc = STATUS_COLORS[p.status] || STATUS_COLORS.archived;
-              return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600,
-                  backgroundColor: sc.bg, color: sc.fg,
-                }}>
-                  {p.status === 'expired' ? 'Expired' : 'Archived'}
-                </span>
-              );
-            })()}
-            {p.shared_with && p.shared_with.length > 0 && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', backgroundColor: 'var(--color-info-light)', color: 'var(--color-info-dark)', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
-                👥 Shared ({p.shared_with.length})
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-            {p.policy_number}
-          </div>
+          )}
+          {p.status && p.status !== 'active' && (
+            <span style={{ padding: '3px 8px', backgroundColor: (STATUS_COLORS[p.status] || STATUS_COLORS.archived).bg, color: (STATUS_COLORS[p.status] || STATUS_COLORS.archived).fg, borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+              {p.status === 'expired' ? 'Expired' : 'Archived'}
+            </span>
+          )}
+          {p.shared_with && p.shared_with.length > 0 && (
+            <span style={{ padding: '3px 8px', backgroundColor: 'var(--color-info-light)', color: 'var(--color-info-dark)', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+              Shared ({p.shared_with.length})
+            </span>
+          )}
+          <div style={{ flex: 1 }} />
+          <button
+            onClick={(e) => { e.stopPropagation(); setDeleteConfirm(p.id); }}
+            aria-label="Delete policy"
+            style={{ padding: '4px 8px', fontSize: 11, color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-danger)'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.opacity = '0.5'; }}
+          >
+            Delete
+          </button>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          {p.renewal_date && (() => {
-            const daysUntil = Math.ceil((new Date(p.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-            const isPast = daysUntil < 0;
-            const isUrgent = daysUntil <= 7;
-            const isRenewingSoon = daysUntil <= 30 && daysUntil > 7;
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                {isPast ? (
-                  <span style={{ padding: '2px 8px', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger-dark)', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>Overdue</span>
-                ) : isUrgent ? (
-                  <span style={{ padding: '2px 8px', backgroundColor: 'var(--color-warning-light)', color: 'var(--color-warning-dark)', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>Urgent</span>
-                ) : isRenewingSoon ? (
-                  <span style={{ padding: '2px 8px', backgroundColor: 'var(--color-info-light)', color: 'var(--color-info-dark)', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>Renewing soon</span>
-                ) : (
-                  <span style={{ padding: '2px 8px', backgroundColor: 'var(--color-success-light)', color: 'var(--color-success-dark)', borderRadius: 12, fontSize: 11, fontWeight: 500 }}>OK</span>
-                )}
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{new Date(p.renewal_date).toLocaleDateString()}</div>
-              </div>
-            );
-          })()}
-        </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); setDeleteConfirm(p.id); }}
-          className="btn btn-outline"
-          style={{ padding: '6px 12px', fontSize: 12, color: 'var(--color-danger)', borderColor: 'var(--color-danger)', backgroundColor: 'transparent' }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-        >
-          Delete
-        </button>
       </div>
     );
   };
@@ -491,78 +486,61 @@ function PoliciesPageInner() {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* ═══════════════════════════════════════════════════════════════
-            1️⃣ COVERAGE STATUS - Status at a glance
+            1️⃣ SUMMARY HEADER
         ═══════════════════════════════════════════════════════════════ */}
         <section style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 34, fontWeight: 700, margin: '0 0 20px', color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-            {loading ? 'Loading...' : 'Coverage Overview'}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+            <h1 style={{ fontSize: 34, fontWeight: 700, margin: 0, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+              {loading ? 'Loading...' : 'Coverage Overview'}
+            </h1>
+            {!loading && scopedPolicies.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%',
+                  backgroundColor: urgentAlerts.length > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+                }} />
+                <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                  {systemStatus.message}
+                </span>
+              </div>
+            )}
+          </div>
 
-          {!loading && scopedPolicies.length > 0 && (() => {
-            // Detect expired policies: either status field is 'expired' OR renewal_date is past
-            const expiredPolicies = scopedPolicies.filter(p => {
-              if (p.status === 'expired') return true;
-              if (p.renewal_date) {
-                const days = Math.ceil((new Date(p.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                return days < 0 && p.status !== 'archived';
-              }
-              return false;
-            });
-
-            // Build status items — only real issues with existing policies
-            const items: { color: string; text: string }[] = [];
-
-            // Red: expired policies
-            expiredPolicies.forEach(p => {
-              items.push({ color: 'var(--color-danger)', text: `${p.nickname || p.carrier} (${POLICY_TYPE_CONFIG[p.policy_type]?.label || p.policy_type}) is expired` });
-            });
-
-            // Red: urgent smart alerts
-            urgentAlerts.forEach(a => {
-              items.push({ color: 'var(--color-danger)', text: a.title });
-            });
-
-            // Yellow: renewals within 60 days (not expired — those are already red above)
-            scopedRenewals.forEach(r => {
-              const days = Math.ceil((new Date(r.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-              if (days > 0 && days <= 60) {
-                items.push({ color: 'var(--color-warning)', text: `${r.nickname || r.carrier} renews in ${days} days` });
-              }
-            });
-
-            // Green: all clear
-            if (items.length === 0) {
-              items.push({ color: 'var(--color-success)', text: 'All policies current. No upcoming renewals.' });
-            }
-
-            return (
-              <div style={{
-                padding: '24px 28px',
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 'var(--radius-lg)',
-              }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
-                  Status
+          {!loading && scopedPolicies.length > 0 && (
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
+            }}>
+              <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Total Coverage</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                  {totalCoverage > 0 ? `$${(totalCoverage / 100).toLocaleString()}` : '\u2014'}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {items.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: item.color, flexShrink: 0 }} />
-                      <span style={{ color: item.color === 'var(--color-success)' ? 'var(--color-text-secondary)' : 'var(--color-text)', fontWeight: item.color === 'var(--color-danger)' ? 600 : 400 }}>
-                        {item.text}
-                      </span>
-                    </div>
-                  ))}
+              </div>
+              <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Annual Premium</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                  {totalPremium > 0 ? `$${(totalPremium / 100).toLocaleString()}` : annualSpend > 0 ? `$${(annualSpend / 100).toLocaleString()}` : '\u2014'}
                 </div>
-                {annualSpend > 0 && (
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f3f4f6', fontSize: 14, color: 'var(--color-text-secondary)' }}>
-                    Annual premium: <strong>${(annualSpend / 100).toLocaleString()}</strong>
+              </div>
+              <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Active Policies</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                  {scopedPolicies.length}
+                </div>
+              </div>
+              <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Next Renewal</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: daysToNextRenewal !== null && daysToNextRenewal <= 30 ? 'var(--color-warning-dark)' : 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                  {daysToNextRenewal !== null ? (daysToNextRenewal <= 0 ? 'Overdue' : `${daysToNextRenewal}d`) : '\u2014'}
+                </div>
+                {nextRenewal && daysToNextRenewal !== null && daysToNextRenewal > 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                    {nextRenewal.nickname || nextRenewal.carrier}
                   </div>
                 )}
               </div>
-            );
-          })()}
+            </div>
+          )}
 
           {!loading && scopedPolicies.length === 0 && (
             <div style={{
@@ -678,27 +656,6 @@ function PoliciesPageInner() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════
-            2️⃣ COVERAGE INSIGHTS
-        ═══════════════════════════════════════════════════════════════ */}
-        {!loading && insights.length > 0 && (
-          <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Coverage Insights</h2>
-            <div style={{
-              padding: '20px 24px',
-              backgroundColor: '#fff',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {insights.slice(0, 4).map((insight, i) => (
-                  <p key={i} style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{insight}</p>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Urgent Alerts */}
         {urgentAlerts.length > 0 && (
           <section style={{ marginBottom: 40 }}>
@@ -803,19 +760,9 @@ function PoliciesPageInner() {
                   <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
                     Personal ({personalPolicies.length})
                   </h3>
-                  {Object.entries(personalByType).map(([typeKey, typePolicies]) => (
-                    <div key={typeKey} style={{ marginBottom: 20 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 16 }}>{POLICY_TYPE_CONFIG[typeKey]?.icon || '📋'}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                          {POLICY_TYPE_CONFIG[typeKey]?.label || typeKey}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {typePolicies.map(p => renderPolicyRow(p))}
-                      </div>
-                    </div>
-                  ))}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                    {personalPolicies.map(p => renderPolicyCard(p))}
+                  </div>
                 </div>
               )}
 
@@ -827,37 +774,33 @@ function PoliciesPageInner() {
               {/* ── BUSINESS SECTION ── */}
               {businessPolicies.length > 0 && scopeTab !== 'personal' && (
                 <div>
-                  <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
-                    Business ({businessPolicies.length})
-                  </h3>
-                  {Object.entries(businessByName).map(([bizName, typeGroups]) => (
-                    <div key={bizName} style={{ marginBottom: 24 }}>
-                      <div
-                        onClick={bizName !== 'Ungrouped' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: bizName !== 'Ungrouped' ? 'pointer' : 'default' }}
-                      >
-                        <span style={{ fontSize: 16 }}>🏢</span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', transition: 'color 0.15s' }}
-                          onMouseEnter={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
-                          onMouseLeave={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-text)'; } : undefined}
-                        >{bizName}</span>
-                        {bizName !== 'Ungrouped' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
-                      </div>
-                      {Object.entries(typeGroups).map(([typeKey, typePolicies]) => (
-                        <div key={typeKey} style={{ marginLeft: 24, marginBottom: 16 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                            <span style={{ fontSize: 14 }}>{POLICY_TYPE_CONFIG[typeKey]?.icon || '📋'}</span>
-                            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-muted)' }}>
-                              {POLICY_TYPE_CONFIG[typeKey]?.label || typeKey}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {typePolicies.map(p => renderPolicyRow(p))}
-                          </div>
+                  {Object.entries(businessByName).map(([bizName, typeGroups]) => {
+                    const allBizPolicies = Object.values(typeGroups).flat();
+                    return (
+                      <div key={bizName} style={{ marginBottom: 28 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                          <span style={{ fontSize: 16 }}>🏢</span>
+                          <h3
+                            onClick={bizName !== 'Ungrouped' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
+                            style={{
+                              margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
+                              textTransform: 'uppercase', letterSpacing: '0.05em',
+                              cursor: bizName !== 'Ungrouped' ? 'pointer' : 'default',
+                              transition: 'color 0.15s',
+                            }}
+                            onMouseEnter={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
+                            onMouseLeave={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; } : undefined}
+                          >
+                            {bizName} ({allBizPolicies.length})
+                          </h3>
+                          {bizName !== 'Ungrouped' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
                         </div>
-                      ))}
-                    </div>
-                  ))}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                          {allBizPolicies.map(p => renderPolicyCard(p))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>
