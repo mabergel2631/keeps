@@ -164,7 +164,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <div className="main-content" style={{ flex: 1, marginLeft: 0 }}>
+      <div className="main-content" style={{ flex: 1, minWidth: 0, overflowX: 'hidden' }}>
         {/* Mobile header bar */}
         <div className="mobile-header" style={{
           display: 'none',
