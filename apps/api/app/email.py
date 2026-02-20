@@ -17,13 +17,16 @@ def _send_email(to_email: str, subject: str, html_body: str) -> None:
     # Try Resend first
     if settings.resend_api_key:
         resend.api_key = settings.resend_api_key
-        resend.Emails.send({
-            "from": settings.from_email,
+        from_addr = settings.from_email
+        if "<" not in from_addr:
+            from_addr = f"Covrabl <{from_addr}>"
+        result = resend.Emails.send({
+            "from": from_addr,
             "to": [to_email],
             "subject": subject,
             "html": html_body,
         })
-        logger.info("Email sent via Resend to %s", to_email)
+        logger.info("Resend response for %s: %s", to_email, result)
         return
 
     # SMTP fallback
