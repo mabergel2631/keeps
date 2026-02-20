@@ -400,7 +400,7 @@ function PoliciesPageInner() {
 
   const businessByName: Record<string, Policy[]> = {};
   businessPolicies.forEach(p => {
-    const bizName = p.business_name || 'Ungrouped';
+    const bizName = p.business_name || 'General';
     if (!businessByName[bizName]) businessByName[bizName] = [];
     businessByName[bizName].push(p);
   });
@@ -526,7 +526,7 @@ function PoliciesPageInner() {
                   {Object.keys(businessByName).filter(g => g !== currentGroup).map(groupName => (
                     <button
                       key={groupName}
-                      onClick={() => handleMovePolicy(p.id, groupName === 'Ungrouped' ? '' : groupName)}
+                      onClick={() => handleMovePolicy(p.id, groupName === 'General' ? '' : groupName)}
                       style={{
                         display: 'block', width: '100%', textAlign: 'left', padding: '8px 14px',
                         fontSize: 13, color: 'var(--color-text)', background: 'none', border: 'none',
@@ -538,7 +538,7 @@ function PoliciesPageInner() {
                       {groupName}
                     </button>
                   ))}
-                  {!Object.keys(businessByName).includes('Ungrouped') && currentGroup !== 'Ungrouped' && (
+                  {!Object.keys(businessByName).includes('General') && currentGroup !== 'General' && (
                     <button
                       onClick={() => handleMovePolicy(p.id, '')}
                       style={{
@@ -549,7 +549,7 @@ function PoliciesPageInner() {
                       onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--color-bg)'; }}
                       onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      Ungrouped
+                      General
                     </button>
                   )}
                   <div style={{ borderTop: '1px solid var(--color-border)' }} />
@@ -917,9 +917,12 @@ function PoliciesPageInner() {
               {/* ── BUSINESS SECTION ── */}
               {businessPolicies.length > 0 && scopeTab !== 'personal' && (
                 <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+                    Business ({businessPolicies.length})
+                  </h3>
                   {Object.entries(businessByName).map(([bizName, bizPolicies]) => {
                     const isEditing = editingGroup === bizName;
-                    const rawName = bizName === 'Ungrouped' ? '' : bizName;
+                    const rawName = bizName === 'General' ? '' : bizName;
                     return (
                     <div key={bizName} style={{ marginBottom: 28 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -933,7 +936,7 @@ function PoliciesPageInner() {
                               if (e.key === 'Enter') handleRenameGroup(rawName, editGroupValue);
                               if (e.key === 'Escape') setEditingGroup(null);
                             }}
-                            onBlur={() => setEditingGroup(null)}
+                            onBlur={() => handleRenameGroup(rawName, editGroupValue)}
                             placeholder="Group name"
                             style={{
                               margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
@@ -945,20 +948,20 @@ function PoliciesPageInner() {
                         ) : (
                           <>
                             <h3
-                              onClick={bizName !== 'Ungrouped' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
+                              onClick={bizName !== 'General' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
                               style={{
                                 margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
                                 textTransform: 'uppercase', letterSpacing: '0.05em',
-                                cursor: bizName !== 'Ungrouped' ? 'pointer' : 'default',
+                                cursor: bizName !== 'General' ? 'pointer' : 'default',
                                 transition: 'color 0.15s',
                               }}
-                              onMouseEnter={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
-                              onMouseLeave={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; } : undefined}
+                              onMouseEnter={bizName !== 'General' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
+                              onMouseLeave={bizName !== 'General' ? (e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; } : undefined}
                             >
                               {bizName} ({bizPolicies.length})
                             </h3>
-                            {bizName !== 'Ungrouped' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
-                            <button
+                            {bizName !== 'General' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
+                            {bizName !== 'General' && <button
                               onClick={() => { setEditingGroup(bizName); setEditGroupValue(rawName); }}
                               aria-label={`Rename ${bizName}`}
                               title="Rename group"
@@ -971,7 +974,7 @@ function PoliciesPageInner() {
                               onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
                             >
                               ✏️
-                            </button>
+                            </button>}
                           </>
                         )}
                       </div>
