@@ -638,7 +638,7 @@ function PoliciesPageInner() {
           </div>
 
           {!loading && scopedPolicies.length > 0 && (
-            <div style={{
+            <div className="mobile-grid-1" style={{
               display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16,
             }}>
               <div style={{ padding: '20px 24px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
@@ -1345,7 +1345,7 @@ function PoliciesPageInner() {
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                         {cat.label}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                      <div className="mobile-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                         {cat.types.map(key => {
                           const cfg = POLICY_TYPE_CONFIG[key];
                           if (!cfg) return null;

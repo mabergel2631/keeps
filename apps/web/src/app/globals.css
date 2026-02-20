@@ -408,6 +408,28 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Wizard: manual form side-by-side fields stack */
   .wizard-side-by-side { grid-template-columns: 1fr !important; }
+
+  /* Responsive grids: collapse to single column on mobile */
+  .mobile-grid-1 { grid-template-columns: 1fr !important; }
+  .mobile-grid-2 { grid-template-columns: 1fr 1fr !important; }
+  .mobile-gap-sm { gap: 12px !important; }
+
+  /* Flex containers: allow wrapping on mobile */
+  .mobile-wrap { flex-wrap: wrap !important; gap: 8px !important; }
+  .mobile-col { flex-direction: column !important; align-items: flex-start !important; }
+
+  /* Flex items: remove min-width constraints */
+  .mobile-no-minw { min-width: 0 !important; }
+
+  /* Chat sidebar: hidden on mobile, toggled via overlay */
+  .chat-sidebar { display: none !important; position: fixed !important; left: 0; top: 0; bottom: 0; z-index: 50; width: 260px; }
+  .chat-sidebar.open { display: flex !important; }
+  .chat-overlay { display: block !important; }
+  .chat-menu-btn { display: block !important; }
+
+  /* Landing page: stack feature grids */
+  .landing-steps { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .landing-trust { grid-template-columns: 1fr 1fr !important; }
 }
 
 /* Safe area padding for notched phones */

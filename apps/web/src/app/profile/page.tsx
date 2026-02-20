@@ -246,14 +246,14 @@ export default function ProfilePage() {
               <FormField label="Full Name" value={form.full_name} onChange={v => setForm({ ...form, full_name: v })} placeholder="John Smith" />
               <FormField label="Phone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} placeholder="(555) 123-4567" type="tel" />
               <FormField label="Street Address" value={form.address_street} onChange={v => setForm({ ...form, address_street: v })} placeholder="123 Main St" />
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
+              <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
                 <FormField label="City" value={form.address_city} onChange={v => setForm({ ...form, address_city: v })} placeholder="Springfield" />
                 <FormField label="State" value={form.address_state} onChange={v => setForm({ ...form, address_state: v })} placeholder="IL" />
                 <FormField label="ZIP" value={form.address_zip} onChange={v => setForm({ ...form, address_zip: v })} placeholder="62701" />
               </div>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <InfoField label="Full Name" value={profile?.full_name} />
               <InfoField label="Phone" value={profile?.phone ? formatPhone(profile.phone) : undefined} />
               <InfoField label="Address" value={[profile?.address_street, [profile?.address_city, profile?.address_state, profile?.address_zip].filter(Boolean).join(' ')].filter(Boolean).join(', ') || undefined} span={2} />
@@ -520,7 +520,7 @@ function ContactFormCard({ form, setForm, type, saving, isEditing, onSave, onCan
         {type === 'broker' && (
           <FormField label="Company" value={form.company || ''} onChange={v => setForm((prev: any) => ({ ...prev, company: v }))} placeholder="ABC Insurance Agency" />
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <FormField label="Phone" value={form.phone || ''} onChange={v => setForm((prev: any) => ({ ...prev, phone: v }))} placeholder="(555) 123-4567" type="tel" />
           <FormField label="Email" value={form.email || ''} onChange={v => setForm((prev: any) => ({ ...prev, email: v }))} placeholder="email@example.com" type="email" />
         </div>

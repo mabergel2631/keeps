@@ -413,7 +413,7 @@ export default function PolicyDetailPage() {
             <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>Review Extracted Data</h2>
             <p style={{ margin: '0 0 20px', color: 'var(--color-text-secondary)', fontSize: 14 }}>Verify and edit the fields below before saving to the policy.</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Carrier</label>
                 <input value={reviewData.carrier ?? ''} onChange={e => updateReviewField('carrier', e.target.value)} style={inputStyle} />
@@ -465,7 +465,7 @@ export default function PolicyDetailPage() {
                       <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', color: '#666' }}>{c.role}</span>
                       <button onClick={() => removeReviewContact(i)} className="btn btn-danger">Remove</button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <input placeholder="Name" value={c.name ?? ''} onChange={e => updateReviewContact(i, 'name', e.target.value)} style={inputStyleSm} />
                       <input placeholder="Company" value={c.company ?? ''} onChange={e => updateReviewContact(i, 'company', e.target.value)} style={inputStyleSm} />
                       <input placeholder="Phone" value={c.phone ?? ''} onChange={e => updateReviewContact(i, 'phone', e.target.value)} style={inputStyleSm} />
@@ -642,9 +642,9 @@ export default function PolicyDetailPage() {
                     <h4 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Current Access</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {shares.map(s => (
-                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#fff', borderRadius: 4, border: '1px solid var(--color-border)' }}>
-                          <div>
-                            <span style={{ fontWeight: 500 }}>{s.shared_with_email}</span>
+                        <div key={s.id} className="mobile-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#fff', borderRadius: 4, border: '1px solid var(--color-border)', flexWrap: 'wrap', gap: 8 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <span style={{ fontWeight: 500, wordBreak: 'break-all' }}>{s.shared_with_email}</span>
                             <span style={{ marginLeft: 8, padding: '2px 6px', borderRadius: 3, fontSize: 11, fontWeight: 600, backgroundColor: s.permission === 'edit' ? '#dbeafe' : '#f0f0f0', color: s.permission === 'edit' ? '#1e40af' : '#555' }}>{s.permission}</span>
                             {s.role_label && <span style={{ marginLeft: 8, padding: '2px 6px', borderRadius: 3, fontSize: 11, fontWeight: 600, backgroundColor: '#f5f3ff', color: '#6d28d9' }}>{s.role_label}</span>}
                             {!s.accepted && <span style={{ marginLeft: 8, fontSize: 11, color: '#999' }}>pending</span>}
@@ -657,7 +657,7 @@ export default function PolicyDetailPage() {
                 )}
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--color-border)' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--color-border)' }}>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Premium</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-primary)' }}>{policy.premium_amount ? `$${policy.premium_amount.toLocaleString()}` : '-'}</div>
@@ -948,7 +948,7 @@ export default function PolicyDetailPage() {
               </div>
             </div>
             <div style={{ padding: '12px 20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13, marginBottom: 12 }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13, marginBottom: 12 }}>
                 <div>
                   <div style={{ color: 'var(--color-text-muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Policy #</div>
                   <div style={{ fontFamily: 'monospace', fontWeight: 500 }}>{policy.policy_number}</div>
@@ -1105,7 +1105,7 @@ export default function PolicyDetailPage() {
                 </div>
 
                 {/* Details */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13 }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13 }}>
                   <div>
                     <div style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Deductible</div>
                     <div style={{ fontWeight: 600, fontSize: 16 }}>${deductibleAmount.toLocaleString()}</div>
@@ -1149,7 +1149,7 @@ export default function PolicyDetailPage() {
               }}
               style={{ padding: 16, backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={labelStyle}>Deductible Type</label>
                   <select
@@ -1202,7 +1202,7 @@ export default function PolicyDetailPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
               <div style={{ padding: 16, backgroundColor: '#fff', borderRadius: 8, border: '1px solid #fecaca' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#991b1b', textTransform: 'uppercase', marginBottom: 6 }}>Policy Number</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1325,7 +1325,7 @@ export default function PolicyDetailPage() {
               }}
               style={{ padding: 16, marginBottom: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={labelStyle}>Annual Premium ($)</label>
                   <input
@@ -1599,7 +1599,7 @@ export default function PolicyDetailPage() {
 
         {showContactForm && (
           <form onSubmit={handleAddContact} style={{ padding: 16, marginBottom: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Role</label>
                 <select value={contactForm.role} onChange={e => setContactForm({ ...contactForm, role: e.target.value })} style={inputStyle}>
@@ -1840,7 +1840,7 @@ export default function PolicyDetailPage() {
 
         {showClaimForm && (
           <form onSubmit={async (e) => { e.preventDefault(); try { await claimsApi.create(policyId, claimForm); setShowClaimForm(false); setClaimForm({ claim_number: '', status: 'open', date_filed: '', description: '' }); setClaims(await claimsApi.list(policyId)); toast('Claim saved', 'success'); } catch (err: any) { setError(err.message); } }} style={{ padding: 16, marginBottom: 16, backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Claim Number</label>
                 <input value={claimForm.claim_number} onChange={e => setClaimForm({ ...claimForm, claim_number: e.target.value })} required style={inputStyle} />

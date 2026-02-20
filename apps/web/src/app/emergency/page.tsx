@@ -807,7 +807,7 @@ export default function EmergencyPage() {
                           </div>
 
                           {/* Quick-copy fields */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+                          <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
                             <CopyField
                               label="Policy #"
                               value={p.policy_number}

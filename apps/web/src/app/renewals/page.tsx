@@ -239,17 +239,17 @@ export default function RenewalsPage() {
             marginBottom: 24,
             flexWrap: 'wrap',
           }}>
-            <div style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+            <div className="mobile-no-minw" style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text)' }}>{data.total_renewing}</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Total Renewing</div>
             </div>
-            <div style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+            <div className="mobile-no-minw" style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: data.total_with_changes > 0 ? 'var(--color-warning-dark)' : 'var(--color-success-dark)' }}>
                 {data.total_with_changes}
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>With Changes</div>
             </div>
-            <div style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+            <div className="mobile-no-minw" style={{ flex: 1, minWidth: 140, padding: 16, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text)' }}>
                 {data.policies[0]?.days_until_renewal ?? '—'}
               </div>

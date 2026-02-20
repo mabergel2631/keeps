@@ -98,7 +98,7 @@ function CompareContent() {
           {/* Coverage items */}
           <div style={{ backgroundColor: '#fff', padding: 24, borderRadius: 8, border: '1px solid #ddd', marginBottom: 24 }}>
             <h2 style={{ margin: '0 0 16px', fontSize: 18 }}>Coverage Items</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${bundles.length}, 1fr)`, gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${bundles.length}, minmax(200px, 1fr))`, gap: 16, overflowX: 'auto' }}>
               {bundles.map(b => (
                 <div key={b.policy.id}>
                   <h3 style={{ fontSize: 14, margin: '0 0 8px', color: '#555' }}>{b.policy.nickname || b.policy.carrier}</h3>
@@ -119,7 +119,7 @@ function CompareContent() {
           {/* Premiums */}
           <div style={{ backgroundColor: '#fff', padding: 24, borderRadius: 8, border: '1px solid #ddd' }}>
             <h2 style={{ margin: '0 0 16px', fontSize: 18 }}>Premiums</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${bundles.length}, 1fr)`, gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${bundles.length}, minmax(200px, 1fr))`, gap: 16, overflowX: 'auto' }}>
               {bundles.map(b => (
                 <div key={b.policy.id}>
                   <h3 style={{ fontSize: 14, margin: '0 0 8px', color: '#555' }}>{b.policy.nickname || b.policy.carrier}</h3>
