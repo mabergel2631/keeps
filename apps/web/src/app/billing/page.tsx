@@ -92,7 +92,7 @@ function BillingContent() {
         padding: 28,
         marginBottom: 20,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 4 }}>Current Plan</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

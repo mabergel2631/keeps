@@ -209,7 +209,7 @@ export default function CertificatesPage() {
   return (
     <div style={{ padding: 32, maxWidth: 960, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Certificates of Insurance</h1>
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>Track COIs you issue and receive</p>
@@ -290,7 +290,7 @@ export default function CertificatesPage() {
                       padding: 20, backgroundColor: '#fff',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 16, fontWeight: 700 }}>{cert.counterparty_name}</span>
@@ -344,7 +344,7 @@ export default function CertificatesPage() {
                         style={{
                           marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
                           backgroundColor: '#f9fafb', border: '1px solid #e5e7eb',
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
                           cursor: 'pointer', transition: 'border-color 0.15s',
                         }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}

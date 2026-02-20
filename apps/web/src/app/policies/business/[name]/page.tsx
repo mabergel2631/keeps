@@ -348,7 +348,7 @@ export default function BusinessEntityPage() {
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{cert.counterparty_name}</span>
                     <span style={{
                       padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600,

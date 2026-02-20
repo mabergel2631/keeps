@@ -61,7 +61,7 @@ function PricingContent() {
         color: '#fff',
       }}>
         {!token && (
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48, flexWrap: 'wrap', gap: 12 }}>
             <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 20, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--letter-spacing-tight)' }}>
               {APP_NAME}
             </button>

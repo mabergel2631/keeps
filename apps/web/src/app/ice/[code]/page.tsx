@@ -303,7 +303,7 @@ export default function EmergencyCardPage() {
               </div>
 
               {/* Policy Number */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: 12, backgroundColor: '#f9fafb', borderRadius: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: 12, backgroundColor: '#f9fafb', borderRadius: 8, flexWrap: 'wrap', gap: 8 }}>
                 <div>
                   <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>POLICY NUMBER</div>
                   <div style={{ fontSize: 16, fontWeight: 600, fontFamily: 'monospace' }}>{policy.policy_number}</div>

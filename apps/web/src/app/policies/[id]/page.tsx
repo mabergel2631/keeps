@@ -498,7 +498,7 @@ export default function PolicyDetailPage() {
               <div style={{ marginTop: 20 }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Extracted Details</h3>
                 {reviewData.details.map((d, i) => (
-                  <div key={i} style={{ padding: 8, marginBottom: 4, backgroundColor: '#f5f3ff', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={i} style={{ padding: 8, marginBottom: 4, backgroundColor: '#f5f3ff', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#555', marginRight: 8 }}>{d.field_name}:</span>
                       <span style={{ fontSize: 13 }}>{d.field_value}</span>
@@ -525,9 +525,9 @@ export default function PolicyDetailPage() {
       <div className="card" style={{ marginBottom: 32 }}>
         {!editing ? (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700, color: 'var(--color-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700, color: 'var(--color-primary)', wordBreak: 'break-word' }}>
                   {policy.nickname || `${policy.carrier} - ${policy.policy_type}`}
                 </h1>
                 {policy.nickname && <p style={{ margin: '0 0 4px', color: 'var(--color-text-secondary)', fontSize: 15 }}>{policy.carrier} - {policy.policy_type}</p>}
@@ -552,13 +552,15 @@ export default function PolicyDetailPage() {
                 </div>
 
                 {/* Sharing Status - Always Visible */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <div style={{
                     fontSize: 13,
                     color: shares.length > 0 ? 'var(--color-text-secondary)' : 'var(--color-text-muted)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6
+                    gap: 6,
+                    minWidth: 0,
+                    flexWrap: 'wrap',
                   }}>
                     {shares.length > 0 ? (
                       <>
@@ -589,7 +591,7 @@ export default function PolicyDetailPage() {
                   </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className={`badge badge-${policy.scope}`}>{policy.scope}</span>
                 <button onClick={() => setShowIdCard(!showIdCard)} className="btn btn-outline">{showIdCard ? 'Hide Card' : 'ID Card'}</button>
                 <button onClick={() => exportApi.singlePolicy(policyId)} className="btn btn-outline">Export CSV</button>
@@ -1449,11 +1451,11 @@ export default function PolicyDetailPage() {
       <div className="card" style={{ marginBottom: 32 }}>
         <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>Documents</h2>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: '#666' }}>Upload a policy PDF to auto-extract carrier, coverage, contacts and more.</p>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={docType} onChange={e => setDocType(e.target.value)} style={{ padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}>
             {DOC_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <input ref={fileRef} type="file" style={{ fontSize: 14 }} />
+          <input ref={fileRef} type="file" style={{ fontSize: 14, minWidth: 0 }} />
           <button onClick={handleUpload} disabled={uploading} className="btn btn-accent">
             {uploading ? 'Uploading...' : 'Upload'}
           </button>
@@ -1476,10 +1478,10 @@ export default function PolicyDetailPage() {
           <div style={{ display: 'grid', gap: 8 }}>
             {/* Current (most recent) document */}
             {(() => { const d = docs[0]; return (
-              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontWeight: 500 }}>{d.filename}</span>
+              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 500, wordBreak: 'break-all' }}>{d.filename}</span>
                     <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, backgroundColor: docTypeBg(d.doc_type), color: docTypeFg(d.doc_type) }}>
                       {DOC_TYPES.find(t => t.value === d.doc_type)?.label || d.doc_type}
                     </span>
@@ -1516,10 +1518,10 @@ export default function PolicyDetailPage() {
                   {showDocHistory ? '\u25be' : '\u25b8'} Document History ({docs.length - 1} older)
                 </button>
                 {showDocHistory && docs.slice(1).map(d => (
-                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 500 }}>{d.filename}</span>
+                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 500, wordBreak: 'break-all' }}>{d.filename}</span>
                         <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, backgroundColor: docTypeBg(d.doc_type), color: docTypeFg(d.doc_type) }}>
                           {DOC_TYPES.find(t => t.value === d.doc_type)?.label || d.doc_type}
                         </span>

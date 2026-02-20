@@ -564,7 +564,7 @@ export default function EmergencyPage() {
                 borderRadius: 8,
                 marginBottom: 16,
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                   <div>
                     <span style={{
                       padding: '4px 8px',
@@ -899,7 +899,7 @@ export default function EmergencyPage() {
                               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Contacts</div>
                               <div style={{ display: 'grid', gap: 6 }}>
                                 {contacts.map(c => (
-                                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-sm)', fontSize: 13, flexWrap: 'wrap', gap: 6 }}>
                                     <div>
                                       <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 10, color: 'var(--color-text-muted)', marginRight: 8 }}>{c.role}</span>
                                       <span style={{ fontWeight: 500 }}>{c.name || c.company || 'Unknown'}</span>
