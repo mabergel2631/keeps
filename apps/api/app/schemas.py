@@ -110,6 +110,11 @@ class PolicyOut(PolicyBase):
         from_attributes = True
 
 
+class BusinessGroupRename(BaseModel):
+    old_name: str  # empty string = ungrouped
+    new_name: str
+
+
 # ── Contacts ──────────────────────────────────────────
 
 class ContactBase(BaseModel):

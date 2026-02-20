@@ -57,12 +57,23 @@ function PoliciesPageInner() {
   const [profileDismissed, setProfileDismissed] = useState(false);
   const [showBulkShare, setShowBulkShare] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'carrier' | 'renewal' | 'type' | 'newest'>('default');
+  const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [editGroupValue, setEditGroupValue] = useState('');
+  const [movingPolicy, setMovingPolicy] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!token) { router.replace('/login'); return; }
     loadAll();
   }, [token]);
+
+  // Close move dropdown on click-outside
+  useEffect(() => {
+    if (movingPolicy === null) return;
+    const handleClick = () => setMovingPolicy(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [movingPolicy]);
 
   // Handle deep-link from entity page: ?addPolicy=true&scope=business&businessName=...
   useEffect(() => {
@@ -293,6 +304,31 @@ function PoliciesPageInner() {
     toast('Copied to clipboard!', 'success');
   };
 
+  const handleRenameGroup = async (oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed && oldName === '') { setEditingGroup(null); return; }
+    if (trimmed === oldName) { setEditingGroup(null); return; }
+    try {
+      await policiesApi.renameBusinessGroup(oldName, trimmed);
+      toast(`Group renamed to "${trimmed}"`, 'success');
+      setEditingGroup(null);
+      loadAll();
+    } catch (err: any) {
+      toast(err.message || 'Failed to rename group', 'error');
+    }
+  };
+
+  const handleMovePolicy = async (policyId: number, newBusinessName: string) => {
+    try {
+      await policiesApi.update(policyId, { business_name: newBusinessName || null });
+      toast('Policy moved', 'success');
+      setMovingPolicy(null);
+      loadAll();
+    } catch (err: any) {
+      toast(err.message || 'Failed to move policy', 'error');
+    }
+  };
+
   // Computed values for insights
   const activePolicies = policies.filter(p => p.carrier !== 'Pending extraction...');
   const hasMultipleScopes = activePolicies.some(p => p.scope === 'personal') && activePolicies.some(p => p.scope === 'business');
@@ -383,7 +419,7 @@ function PoliciesPageInner() {
   // Compute summary stats
   const totalPremium = scopedPolicies.reduce((sum, p) => sum + (p.premium_amount || 0), 0);
 
-  const renderPolicyCard = (p: Policy) => {
+  const renderPolicyCard = (p: Policy, currentGroup?: string) => {
     const policyStatus = getPolicyStatus(p.id);
     const cfg = POLICY_TYPE_CONFIG[p.policy_type] || { icon: '📋', label: p.policy_type };
     const renewalInfo = p.renewal_date ? (() => {
@@ -467,6 +503,75 @@ function PoliciesPageInner() {
             </span>
           )}
           <div style={{ flex: 1 }} />
+          {p.scope === 'business' && currentGroup && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMovingPolicy(movingPolicy === p.id ? null : p.id); }}
+                aria-label="Move to group"
+                style={{ padding: '4px 8px', fontSize: 11, color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.opacity = '0.5'; }}
+              >
+                Move
+              </button>
+              {movingPolicy === p.id && (
+                <div
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    position: 'absolute', bottom: '100%', right: 0, marginBottom: 4,
+                    backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, minWidth: 180, overflow: 'hidden',
+                  }}
+                >
+                  {Object.keys(businessByName).filter(g => g !== currentGroup).map(groupName => (
+                    <button
+                      key={groupName}
+                      onClick={() => handleMovePolicy(p.id, groupName === 'Ungrouped' ? '' : groupName)}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left', padding: '8px 14px',
+                        fontSize: 13, color: 'var(--color-text)', background: 'none', border: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--color-bg)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      {groupName}
+                    </button>
+                  ))}
+                  {!Object.keys(businessByName).includes('Ungrouped') && currentGroup !== 'Ungrouped' && (
+                    <button
+                      onClick={() => handleMovePolicy(p.id, '')}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left', padding: '8px 14px',
+                        fontSize: 13, color: 'var(--color-text-muted)', background: 'none', border: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--color-bg)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      Ungrouped
+                    </button>
+                  )}
+                  <div style={{ borderTop: '1px solid var(--color-border)' }} />
+                  <button
+                    onClick={() => {
+                      const name = prompt('New group name:');
+                      if (name && name.trim()) handleMovePolicy(p.id, name.trim());
+                    }}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left', padding: '8px 14px',
+                      fontSize: 13, color: 'var(--color-primary)', background: 'none', border: 'none',
+                      cursor: 'pointer', fontWeight: 600,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--color-bg)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    + New Group...
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); setDeleteConfirm(p.id); }}
             aria-label="Delete policy"
@@ -812,30 +917,70 @@ function PoliciesPageInner() {
               {/* ── BUSINESS SECTION ── */}
               {businessPolicies.length > 0 && scopeTab !== 'personal' && (
                 <div>
-                  {Object.entries(businessByName).map(([bizName, bizPolicies]) => (
+                  {Object.entries(businessByName).map(([bizName, bizPolicies]) => {
+                    const isEditing = editingGroup === bizName;
+                    const rawName = bizName === 'Ungrouped' ? '' : bizName;
+                    return (
                     <div key={bizName} style={{ marginBottom: 28 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <span style={{ fontSize: 16 }}>🏢</span>
-                        <h3
-                          onClick={bizName !== 'Ungrouped' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
-                          style={{
-                            margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
-                            textTransform: 'uppercase', letterSpacing: '0.05em',
-                            cursor: bizName !== 'Ungrouped' ? 'pointer' : 'default',
-                            transition: 'color 0.15s',
-                          }}
-                          onMouseEnter={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
-                          onMouseLeave={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; } : undefined}
-                        >
-                          {bizName} ({bizPolicies.length})
-                        </h3>
-                        {bizName !== 'Ungrouped' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            value={editGroupValue}
+                            onChange={e => setEditGroupValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleRenameGroup(rawName, editGroupValue);
+                              if (e.key === 'Escape') setEditingGroup(null);
+                            }}
+                            onBlur={() => setEditingGroup(null)}
+                            placeholder="Group name"
+                            style={{
+                              margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
+                              textTransform: 'uppercase', letterSpacing: '0.05em',
+                              border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)',
+                              padding: '4px 8px', outline: 'none', backgroundColor: '#fff', width: 200,
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <h3
+                              onClick={bizName !== 'Ungrouped' ? () => router.push(`/policies/business/${encodeURIComponent(bizName)}`) : undefined}
+                              style={{
+                                margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)',
+                                textTransform: 'uppercase', letterSpacing: '0.05em',
+                                cursor: bizName !== 'Ungrouped' ? 'pointer' : 'default',
+                                transition: 'color 0.15s',
+                              }}
+                              onMouseEnter={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-primary)'; } : undefined}
+                              onMouseLeave={bizName !== 'Ungrouped' ? (e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; } : undefined}
+                            >
+                              {bizName} ({bizPolicies.length})
+                            </h3>
+                            {bizName !== 'Ungrouped' && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>&rarr;</span>}
+                            <button
+                              onClick={() => { setEditingGroup(bizName); setEditGroupValue(rawName); }}
+                              aria-label={`Rename ${bizName}`}
+                              title="Rename group"
+                              style={{
+                                padding: '2px 6px', fontSize: 13, color: 'var(--color-text-muted)',
+                                background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5,
+                                lineHeight: 1,
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-primary)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                            >
+                              ✏️
+                            </button>
+                          </>
+                        )}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                        {bizPolicies.map(p => renderPolicyCard(p))}
+                        {bizPolicies.map(p => renderPolicyCard(p, bizName))}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>

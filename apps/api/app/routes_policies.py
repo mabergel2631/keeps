@@ -8,7 +8,7 @@ from .auth import get_current_user
 from .db import get_db
 from .models import Policy, Contact, CoverageItem, PolicyDetail, User, Exposure
 from .models_features import Premium, PolicyShare
-from .schemas import PolicyCreate, PolicyUpdate, PolicyOut
+from .schemas import PolicyCreate, PolicyUpdate, PolicyOut, BusinessGroupRename
 from .audit_helper import log_action
 from .routes_reminders import ensure_reminders
 
@@ -97,6 +97,33 @@ def list_business_names(db: Session = Depends(get_db), user: User = Depends(get_
         .where(Policy.business_name != "")
     ).scalars().all()
     return sorted(names)
+
+
+@router.put("/business-names/rename")
+def rename_business_group(payload: BusinessGroupRename, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    old_val = payload.old_name if payload.old_name else None
+    new_val = payload.new_name if payload.new_name else None
+
+    if old_val is None:
+        # Ungrouped: match NULL or empty string
+        policies = db.execute(
+            select(Policy).where(
+                Policy.user_id == user.id,
+                (Policy.business_name.is_(None)) | (Policy.business_name == ""),
+            )
+        ).scalars().all()
+    else:
+        policies = db.execute(
+            select(Policy).where(Policy.user_id == user.id, Policy.business_name == old_val)
+        ).scalars().all()
+
+    for p in policies:
+        p.business_name = new_val
+
+    log_action(db, user.id, "renamed_business_group", "policy", 0,
+               details=f"{payload.old_name or '(ungrouped)'} -> {payload.new_name or '(ungrouped)'}")
+    db.commit()
+    return {"ok": True, "updated": len(policies)}
 
 
 @router.get("/compare")

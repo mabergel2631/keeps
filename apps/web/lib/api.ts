@@ -210,6 +210,13 @@ export const policiesApi = {
   businessNames(): Promise<string[]> {
     return request<string[]>("/policies/business-names");
   },
+  renameBusinessGroup(oldName: string, newName: string): Promise<{ ok: boolean; updated: number }> {
+    return request<{ ok: boolean; updated: number }>("/policies/business-names/rename", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ old_name: oldName, new_name: newName }),
+    });
+  },
 };
 
 // ── Contacts API ─────────────────────────────────────
