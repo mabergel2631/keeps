@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .email import _send_smtp
+from .email import _send_email
 from .models import Policy, User
 from .models_features import RenewalReminder
 
@@ -84,19 +84,15 @@ async def send_renewal_reminders(db: Session) -> dict:
 </body>
 </html>"""
 
-        if settings.smtp_host and settings.smtp_user:
-            try:
-                await asyncio.to_thread(
-                    _send_smtp,
-                    data["email"],
-                    "Covrabl: Upcoming policy renewals",
-                    html,
-                )
-                sent += 1
-                logger.info("Renewal reminder email sent to %s", data["email"])
-            except Exception:
-                logger.exception("Failed to send renewal email to %s", data["email"])
-        else:
-            logger.info("SMTP not configured — skipping renewal email for user %s", user_id)
+        try:
+            await asyncio.to_thread(
+                _send_email,
+                data["email"],
+                "Covrabl: Upcoming policy renewals",
+                html,
+            )
+            sent += 1
+        except Exception:
+            logger.exception("Failed to send renewal email to %s", data["email"])
 
     return {"sent": sent, "users": len(by_user)}

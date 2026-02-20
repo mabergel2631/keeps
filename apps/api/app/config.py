@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     cors_origins: str = ""
 
+    resend_api_key: str = ""
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""

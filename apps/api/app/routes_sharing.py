@@ -1,4 +1,3 @@
-import asyncio
 from datetime import date
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -64,8 +63,7 @@ def bulk_share(payload: BulkShareCreate, background_tasks: BackgroundTasks, db: 
 
     if created > 0:
         background_tasks.add_task(
-            asyncio.run,
-            send_share_email(payload.shared_with_email, user.email, created, payload.permission),
+            send_share_email, payload.shared_with_email, user.email, created, payload.permission,
         )
 
     return BulkShareResult(created=created, skipped=len(existing_set), total=len(payload.policy_ids))
@@ -103,8 +101,7 @@ def share_policy(policy_id: int, payload: ShareCreate, background_tasks: Backgro
     db.refresh(share)
 
     background_tasks.add_task(
-        asyncio.run,
-        send_share_email(payload.shared_with_email, user.email, 1, payload.permission),
+        send_share_email, payload.shared_with_email, user.email, 1, payload.permission,
     )
 
     return share

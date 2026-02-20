@@ -4,22 +4,44 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import resend
+
 from .config import settings
 
 logger = logging.getLogger(__name__)
 
 
-def _send_smtp(to_email: str, subject: str, html_body: str) -> None:
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = settings.from_email
-    msg["To"] = to_email
-    msg.attach(MIMEText(html_body, "html"))
+def _send_email(to_email: str, subject: str, html_body: str) -> None:
+    """Send an email via Resend (preferred) or SMTP fallback."""
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
-        server.starttls()
-        server.login(settings.smtp_user, settings.smtp_password)
-        server.sendmail(settings.from_email, to_email, msg.as_string())
+    # Try Resend first
+    if settings.resend_api_key:
+        resend.api_key = settings.resend_api_key
+        resend.Emails.send({
+            "from": settings.from_email,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body,
+        })
+        logger.info("Email sent via Resend to %s", to_email)
+        return
+
+    # SMTP fallback
+    if settings.smtp_host and settings.smtp_user:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = settings.from_email
+        msg["To"] = to_email
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+            server.starttls()
+            server.login(settings.smtp_user, settings.smtp_password)
+            server.sendmail(settings.from_email, to_email, msg.as_string())
+        logger.info("Email sent via SMTP to %s", to_email)
+        return
+
+    logger.info("SMTP not configured — skipped email to %s (subject: %s)", to_email, subject)
 
 
 async def send_reset_email(to_email: str, reset_url: str) -> None:
@@ -40,14 +62,10 @@ async def send_reset_email(to_email: str, reset_url: str) -> None:
 </body>
 </html>"""
 
-    if settings.smtp_host and settings.smtp_user:
-        try:
-            await asyncio.to_thread(_send_smtp, to_email, "Reset your Covrabl password", html)
-            logger.info("Password reset email sent to %s", to_email)
-        except Exception:
-            logger.exception("Failed to send reset email to %s", to_email)
-    else:
-        logger.info("SMTP not configured — reset link for %s: %s", to_email, reset_url)
+    try:
+        await asyncio.to_thread(_send_email, to_email, "Reset your Covrabl password", html)
+    except Exception:
+        logger.exception("Failed to send reset email to %s", to_email)
 
 
 async def send_share_email(
@@ -77,15 +95,11 @@ async def send_share_email(
 </body>
 </html>"""
 
-    if settings.smtp_host and settings.smtp_user:
-        try:
-            await asyncio.to_thread(
-                _send_smtp, to_email,
-                f"{from_name} shared insurance coverage with you on Covrabl",
-                html,
-            )
-            logger.info("Share notification sent to %s", to_email)
-        except Exception:
-            logger.exception("Failed to send share email to %s", to_email)
-    else:
-        logger.info("SMTP not configured — share notification for %s skipped", to_email)
+    try:
+        await asyncio.to_thread(
+            _send_email, to_email,
+            f"{from_name} shared insurance coverage with you on Covrabl",
+            html,
+        )
+    except Exception:
+        logger.exception("Failed to send share email to %s", to_email)
